@@ -1,3 +1,3 @@
-# iot_gardener
+# IoT Gardener
 
-A new Flutter project.
+An app for an initiative course project.
