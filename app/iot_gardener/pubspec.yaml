@@ -1,5 +1,5 @@
 name: iot_gardener
-description: "A new Flutter project."
+description: "An app for an initiative course project."
 publish_to: 'none'
 version: 0.1.0
 
@@ -9,11 +9,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.2.0
+  wifi_iot: ^0.3.19+1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/iot_gardener_icon.png"
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icons/iot_gardener_icon.png
