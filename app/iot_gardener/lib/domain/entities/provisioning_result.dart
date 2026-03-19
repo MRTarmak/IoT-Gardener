@@ -1,5 +1,1 @@
-enum ProvisioningResult {
-  success,
-  deviceError,
-  connectionFailed,
-}
+enum ProvisioningResult { success, deviceError, connectionFailed }

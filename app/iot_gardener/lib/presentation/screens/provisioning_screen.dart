@@ -64,7 +64,8 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
       _errorMessage = null;
     });
 
-    final reachable = await DeviceProvisioningDatasourceImpl().isDeviceReachable();
+    final reachable = await DeviceProvisioningDatasourceImpl()
+        .isDeviceReachable();
 
     if (!mounted) return;
 
