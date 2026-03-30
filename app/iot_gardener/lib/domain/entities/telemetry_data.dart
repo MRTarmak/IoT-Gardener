@@ -1,3 +1,5 @@
+import '../utils/converter.dart';
+
 class TelemetryData {
   final double soilMoisture;
   final double airHumidity;
@@ -17,22 +19,12 @@ class TelemetryData {
 
   factory TelemetryData.fromMap(Map<String, dynamic> map) {
     return TelemetryData(
-      soilMoisture: _toDouble(map['soilMoisture']),
-      airHumidity: _toDouble(map['airHumidity']),
-      soilPh: _toDouble(map['soilPh']),
-      temperature: _toDouble(map['temperature']),
-      light: _toDouble(map['light']),
+      soilMoisture: Converter.toDouble(map['soilMoisture']),
+      airHumidity: Converter.toDouble(map['airHumidity']),
+      soilPh: Converter.toDouble(map['soilPh']),
+      temperature: Converter.toDouble(map['temperature']),
+      light: Converter.toDouble(map['light']),
       receivedAt: DateTime.now(),
     );
-  }
-
-  static double _toDouble(dynamic value) {
-    if (value is num) {
-      return value.toDouble();
-    }
-    if (value is String) {
-      return double.tryParse(value) ?? 0;
-    }
-    return 0;
   }
 }
