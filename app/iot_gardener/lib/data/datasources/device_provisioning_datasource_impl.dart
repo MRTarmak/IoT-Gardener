@@ -36,8 +36,7 @@ class DeviceProvisioningDatasourceImpl implements DeviceProvisioningDatasource {
   Future<bool> isDeviceReachable() async {
     final uri = Uri.http('$deviceApIp:$devicePort', '/ping');
     try {
-      final response =
-          await http.get(uri).timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (_) {
       return false;
