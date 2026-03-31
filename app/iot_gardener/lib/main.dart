@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:iot_gardener/domain/usecases/monitoring_profiles_device.dart';
 
 import 'data/datasources/mqtt_telemetry_datasource_impl.dart';
+import 'data/repositories_impl/monitoring_profiles_repository_impl.dart';
 import 'data/repositories_impl/mqtt_telemetry_repository_impl.dart';
 import 'domain/usecases/mqtt_device.dart';
 import 'presentation/screens/root_screen.dart';
@@ -14,9 +16,15 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final datasource = MqttTelemetryDatasourceImpl();
-    final repository = MqttTelemetryRepositoryImpl(datasource);
-    final mqttDevice = MqttDevice(repository);
+    final mqttTelemetryDatasource = MqttTelemetryDatasourceImpl();
+    final mqttTelemetryRepository = MqttTelemetryRepositoryImpl(
+      mqttTelemetryDatasource,
+    );
+    final mqttDevice = MqttDevice(mqttTelemetryRepository);
+    final monitoringProfilesRepository = MonitoringProfilesRepositoryImpl();
+    final monitoringProfilesDevice = MonitoringProfilesDevice(
+      monitoringProfilesRepository,
+    );
 
     return MaterialApp(
       title: 'IoT Gardener',
@@ -28,7 +36,10 @@ class MainApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: RootScreen(mqttDevice: mqttDevice),
+      home: RootScreen(
+        mqttDevice: mqttDevice,
+        monitoringProfilesDevice: monitoringProfilesDevice,
+      ),
     );
   }
 }
