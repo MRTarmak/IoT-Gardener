@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/entities/monitoring_profile_params.dart';
 import '../../domain/entities/telemetry_data.dart';
 import '../widgets/telemetry_tile.dart';
 
 class HomeScreen extends StatelessWidget {
   final bool isConnected;
   final TelemetryData? telemetry;
+  final MonitoringProfileParams? selectedProfile;
   final VoidCallback onOpenSettings;
 
   const HomeScreen({
     super.key,
     required this.isConnected,
     required this.telemetry,
+    required this.selectedProfile,
     required this.onOpenSettings,
   });
+
+  bool _isOutOfRange(double value, (double?, double?) range) {
+    final min = range.$1;
+    final max = range.$2;
+
+    if (min != null && value < min) return true;
+    if (max != null && value > max) return true;
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,36 +64,95 @@ class HomeScreen extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final profile = selectedProfile;
+
+    final soilOut =
+        profile != null &&
+        _isOutOfRange(telemetry!.soilMoisture, profile.soilMoistureRange);
+    final airOut =
+        profile != null &&
+        _isOutOfRange(telemetry!.airHumidity, profile.airHumidityRange);
+    final phOut =
+        profile != null && _isOutOfRange(telemetry!.soilPh, profile.soilPhRange);
+    final tempOut =
+        profile != null &&
+        _isOutOfRange(telemetry!.temperature, profile.temperatureRange);
+    final lightOut =
+        profile != null && _isOutOfRange(telemetry!.light, profile.lightRange);
+
+    final violations = <String>[
+      if (soilOut) 'влажность почвы',
+      if (airOut) 'влажность воздуха',
+      if (phOut) 'pH почвы',
+      if (tempOut) 'температура',
+      if (lightOut) 'освещенность',
+    ];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (profile == null)
+            const Card(
+              margin: EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: Icon(Icons.info_outline),
+                title: Text('Профиль мониторинга не выбран'),
+                subtitle: Text(
+                  'Выберите профиль во вкладке Профили, чтобы отслеживать выход за границы.',
+                ),
+              ),
+            ),
+          if (profile != null && violations.isNotEmpty)
+            Card(
+              color: Theme.of(context).colorScheme.errorContainer,
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: Icon(
+                  Icons.warning_amber_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  'Отклонение от профиля "${profile.name}"',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+                subtitle: Text('Вне границ: ${violations.join(', ')}'),
+              ),
+            ),
           TelemetryTile(
             label: 'Влажность почвы',
             value: '${telemetry!.soilMoisture.toStringAsFixed(1)} %',
             icon: Icons.grass,
+            isOutOfRange: soilOut,
           ),
           TelemetryTile(
             label: 'Влажность воздуха',
             value: '${telemetry!.airHumidity.toStringAsFixed(1)} %',
             icon: Icons.water_drop,
+            isOutOfRange: airOut,
           ),
           TelemetryTile(
             label: 'Кислотность почвы (pH)',
             value: telemetry!.soilPh.toStringAsFixed(2),
             icon: Icons.science,
+            isOutOfRange: phOut,
           ),
           TelemetryTile(
             label: 'Температура',
             value: '${telemetry!.temperature.toStringAsFixed(1)} °C',
             icon: Icons.thermostat,
+            isOutOfRange: tempOut,
           ),
           TelemetryTile(
             label: 'Освещенность',
             value: '${telemetry!.light.toStringAsFixed(0)} лк',
             icon: Icons.wb_sunny,
+            isOutOfRange: lightOut,
           ),
           const SizedBox(height: 12),
           Text(

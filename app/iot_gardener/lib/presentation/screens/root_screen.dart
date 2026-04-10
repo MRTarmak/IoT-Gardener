@@ -182,6 +182,7 @@ class _RootScreenState extends State<RootScreen> {
           HomeScreen(
             isConnected: _isConnected,
             telemetry: _telemetry,
+            selectedProfile: _selectedProfile,
             onOpenSettings: _openSettingsTab,
           ),
           SettingsScreen(

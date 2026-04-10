@@ -470,7 +470,12 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
                         title: Text(profile.name),
                         subtitle: Text(_buildProfileDetails(profile)),
                         selected: isSelected,
-                        onTap: () => widget.onSelectProfile(profile: profile),
+                        onTap: () => {
+                          if (isSelected)
+                            widget.onSelectProfile(profile: null)
+                          else
+                            widget.onSelectProfile(profile: profile),
+                        },
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _onDelete(profile.name),
