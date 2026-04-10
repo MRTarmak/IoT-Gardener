@@ -429,73 +429,163 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Профили мониторинга',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: FutureBuilder<List<MonitoringProfileParams>>(
-              future: _profilesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Ошибка загрузки профилей'));
-                }
-                final profiles = snapshot.data ?? [];
-                if (profiles.isEmpty) {
-                  return const Center(child: Text('Нет профилей'));
-                }
-                return ListView.builder(
-                  itemCount: profiles.length,
-                  itemBuilder: (context, index) {
-                    final profile = profiles[index];
-                    final isSelected =
-                        widget.selectedProfileName == profile.name;
-
-                    return Card(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      child: ListTile(
-                        title: Text(profile.name),
-                        subtitle: Text(_buildProfileDetails(profile)),
-                        selected: isSelected,
-                        onTap: () => {
-                          if (isSelected)
-                            widget.onSelectProfile(profile: null)
-                          else
-                            widget.onSelectProfile(profile: profile),
-                        },
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _onDelete(profile.name),
-                          tooltip: 'Удалить',
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+    return FutureBuilder<List<MonitoringProfileParams>>(
+      future: _profilesFuture,
+      builder: (context, snapshot) {
+        Widget content = CustomScrollView(
+          slivers: [
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'Профили мониторинга',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('Добавить профиль'),
-          ),
-        ],
-      ),
+          ],
+        );
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          content = CustomScrollView(
+            slivers: [
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Профили мониторинга',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          );
+        } else if (snapshot.hasError) {
+          content = CustomScrollView(
+            slivers: [
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'Профили мониторинга',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: Text('Ошибка загрузки профилей')),
+              ),
+            ],
+          );
+        } else {
+          final profiles = snapshot.data ?? [];
+
+          if (profiles.isEmpty) {
+            content = CustomScrollView(
+              slivers: [
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'Профили мониторинга',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      'Нет профилей',
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            content = CustomScrollView(
+              slivers: [
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'Профили мониторинга',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList.builder(
+                    itemCount: profiles.length,
+                    itemBuilder: (context, index) {
+                      final profile = profiles[index];
+                      final isSelected = widget.selectedProfileName == profile.name;
+
+                      return Card(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        child: ListTile(
+                          title: Text(profile.name),
+                          subtitle: Text(_buildProfileDetails(profile)),
+                          selected: isSelected,
+                          onTap: () {
+                            if (isSelected) {
+                              widget.onSelectProfile(profile: null);
+                            } else {
+                              widget.onSelectProfile(profile: profile);
+                            }
+                          },
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _onDelete(profile.name),
+                            tooltip: 'Удалить',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 70)),
+              ],
+            );
+          }
+        }
+
+        return Stack(
+          children: [
+            Positioned.fill(child: content),
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: FloatingActionButton(
+                  onPressed: _onAdd,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  tooltip: 'Добавить профиль',
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
