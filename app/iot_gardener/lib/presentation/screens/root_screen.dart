@@ -177,6 +177,7 @@ class _RootScreenState extends State<RootScreen> {
             onAddProfile: _addMonitoringProfile,
             onDeleteProfile: _deleteMonitoringProfileByName,
             onSelectProfile: _selectMonitoringProfile,
+            selectedProfileName: _selectedProfile?.name,
           ),
           HomeScreen(
             isConnected: _isConnected,
