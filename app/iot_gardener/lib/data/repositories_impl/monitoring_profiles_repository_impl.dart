@@ -2,9 +2,9 @@ import 'dart:convert' hide Converter;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../mappers/monitoring_profile_mapper.dart';
 import '../../domain/entities/monitoring_profile_params.dart';
 import '../../domain/repositories/monitoring_profiles_repository.dart';
-import '../../domain/utils/converter.dart';
 
 class MonitoringProfilesRepositoryImpl extends MonitoringProfilesRepository {
   static const String _profilesKey = 'monitoring_profiles';
@@ -33,7 +33,7 @@ class MonitoringProfilesRepositoryImpl extends MonitoringProfilesRepository {
     final prefs = await SharedPreferences.getInstance();
     final names = prefs.getStringList(_profilesNamesKey) ?? [];
     if (!names.contains(params.name)) {
-      final jsonStr = jsonEncode(Converter.toMap(params));
+      final jsonStr = jsonEncode(MonitoringProfileMapper.toMap(params));
       await prefs.setString('$_profilesKey${params.name}', jsonStr);
       names.add(params.name);
       await prefs.setStringList(_profilesNamesKey, names);
