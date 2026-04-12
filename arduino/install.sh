@@ -54,3 +54,13 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "UPLOADING SUCCESS"
+
+BAUDRATE=115200
+echo""
+read -p "Open Serial Monitor on $PORT? (y/N): " OPEN_MONITOR
+if [[ "$OPEN_MONITOR" =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "=== Serial Monitor ($PORT @ $BAUDRATE baud) ==="
+    echo "Press Ctrl+C to exit."
+    arduino-cli monitor -p "$PORT" --config baudrate="$BAUDRATE"
+fi
