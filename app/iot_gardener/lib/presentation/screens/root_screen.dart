@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:iot_gardener/domain/usecases/monitoring_profiles_device.dart';
+import 'package:iot_gardener/presentation/screens/monitoring_profiles_screen.dart';
 
+import '../../domain/entities/monitoring_profile_params.dart';
 import '../../domain/entities/mqtt_connection_params.dart';
 import '../../domain/entities/telemetry_data.dart';
 import '../../domain/usecases/mqtt_device.dart';
@@ -10,15 +13,20 @@ import 'settings_screen.dart';
 
 class RootScreen extends StatefulWidget {
   final MqttDevice mqttDevice;
+  final MonitoringProfilesDevice monitoringProfilesDevice;
 
-  const RootScreen({super.key, required this.mqttDevice});
+  const RootScreen({
+    super.key,
+    required this.mqttDevice,
+    required this.monitoringProfilesDevice,
+  });
 
   @override
   State<RootScreen> createState() => _RootScreenState();
 }
 
 class _RootScreenState extends State<RootScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
   bool _isConnected = false;
   bool _isConnecting = false;
   String? _settingsError;
@@ -33,6 +41,8 @@ class _RootScreenState extends State<RootScreen> {
 
   StreamSubscription<bool>? _connectionSubscription;
   StreamSubscription<TelemetryData>? _telemetrySubscription;
+
+  MonitoringProfileParams? _selectedProfile;
 
   @override
   void initState() {
@@ -111,7 +121,39 @@ class _RootScreenState extends State<RootScreen> {
 
   void _openSettingsTab() {
     setState(() {
-      _currentIndex = 1;
+      _currentIndex = 2;
+    });
+  }
+
+  Future<List<MonitoringProfileParams>> _getMonitoringProfiles() async {
+    return widget.monitoringProfilesDevice.getMonitoringProfiles();
+  }
+
+  Future<void> _addMonitoringProfile(MonitoringProfileParams params) async {
+    try {
+      await widget.monitoringProfilesDevice.addMonitoringProfile(params);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при добавлении профиля: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteMonitoringProfileByName(String name) async {
+    try {
+      await widget.monitoringProfilesDevice.deleteMonitoringProfileByName(name);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка при удалении профиля: $e')),
+      );
+    }
+  }
+
+  void _selectMonitoringProfile({MonitoringProfileParams? profile}) {
+    setState(() {
+      _selectedProfile = profile;
     });
   }
 
@@ -130,9 +172,17 @@ class _RootScreenState extends State<RootScreen> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
+          MonitoringProfilesScreen(
+            getProfiles: _getMonitoringProfiles,
+            onAddProfile: _addMonitoringProfile,
+            onDeleteProfile: _deleteMonitoringProfileByName,
+            onSelectProfile: _selectMonitoringProfile,
+            selectedProfileName: _selectedProfile?.name,
+          ),
           HomeScreen(
             isConnected: _isConnected,
             telemetry: _telemetry,
+            selectedProfile: _selectedProfile,
             onOpenSettings: _openSettingsTab,
           ),
           SettingsScreen(
@@ -156,6 +206,7 @@ class _RootScreenState extends State<RootScreen> {
           });
         },
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.list), label: 'Профили'),
           NavigationDestination(icon: Icon(Icons.home), label: 'Главная'),
           NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки'),
         ],
