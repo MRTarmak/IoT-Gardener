@@ -4,29 +4,58 @@ FQBN="arduino:avr:uno"
 SKETCH_DIR="./src/gardener"
 LIBRARIES_DIR="./libraries"
 
+source .env
+
+check_env() {
+    if [ -z "$1" ]; then
+        echo "ERROR: $2 is not specified."
+        echo "Please import or specify in .env file"
+        exit 0
+    else
+        echo "Found: $2=$1"
+    fi
+} 
+
 # Check that arduino-cli is installed
 if ! command -v arduino-cli &> /dev/null; then
     echo "ERROR: arduino-cli is required."
     exit 1
 fi
 
-PORT=$1
-shift
 EXTRA_FLAGS="$@"
+
+
+check_env "$EMQX_ENDPOINT" "EMQX_ENDPOINT"
+check_env "$EMQX_PORT" "EMQX_PORT"
+check_env "$EMQX_USERNAME" "EMQX_USERNAME"
+check_env "$EMQX_PASSWORD" "EMQX_PASSWORD"
+
+#
+# Compile
+#
 
 # Base compilation command
 COMPILE_CMD=(arduino-cli compile --fqbn "$FQBN" --libraries "$LIBRARIES_DIR")
 
-# Add extra flags
+MACRO_FLAGS="-DMQ_ENDPOINT=$EMQX_ENDPOINT "
+MACRO_FLAGS+="-DMQ_PORT=$EMQX_PORT "
+MACRO_FLAGS+="-DMQ_USERNAME=$EMQX_USERNAME "
+MACRO_FLAGS+="-DMQ_PASSWORD=$EMQX_PASSWORD "
+
 if [ -n "$EXTRA_FLAGS" ]; then
     echo "Using extra flags: $EXTRA_FLAGS"
-    COMPILE_CMD+=(--build-property "build.extra_flags=$EXTRA_FLAGS")
+    MACRO_FLAGS+="$EXTRA_FLAGS"
 fi
+
+COMPILE_CMD+=(--build-property "build.extra_flags=$MACRO_FLAGS")
+
 
 COMPILE_CMD+=("$SKETCH_DIR")
 
 echo ""
 echo "=== COMPILING PROJECT ==="
+echo "${COMPILE_CMD[@]}"
+
 "${COMPILE_CMD[@]}"
 
 if [ $? -ne 0 ]; then
@@ -37,11 +66,11 @@ fi
 
 echo "COMPILATION SUCCESS"
 
-# Upload script
-if [ -z "$PORT" ]; then
-    echo "WARNING: port is not specified. Skipping upload."
-    exit 0
-fi
+#
+# UPLOAD
+#
+
+check_env "$PORT" "PORT"
 
 echo ""
 echo "=== UPLOADING TO $PORT === "
