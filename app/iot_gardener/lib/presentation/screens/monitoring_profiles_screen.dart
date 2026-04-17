@@ -42,6 +42,9 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
   }
 
   Future<void> _onDelete(String name) async {
+    if (widget.selectedProfileName == name) {
+      widget.onSelectProfile(profile: null);
+    }
     await widget.onDeleteProfile(name);
     if (!mounted) return;
     _refreshProfiles();
@@ -125,7 +128,10 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Профили мониторинга',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -149,7 +155,10 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Профили мониторинга',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -160,7 +169,8 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
                     itemCount: profiles.length,
                     itemBuilder: (context, index) {
                       final profile = profiles[index];
-                      final isSelected = widget.selectedProfileName == profile.name;
+                      final isSelected =
+                          widget.selectedProfileName == profile.name;
 
                       return Card(
                         color: isSelected
@@ -168,11 +178,11 @@ class _MonitoringProfilesScreenState extends State<MonitoringProfilesScreen> {
                             : null,
                         child: ListTile(
                           title: Text(profile.name),
-                            subtitle: Text(
-                              MonitoringProfileFormatter.formatProfileDetails(
-                                profile,
-                              ),
+                          subtitle: Text(
+                            MonitoringProfileFormatter.formatProfileDetails(
+                              profile,
                             ),
+                          ),
                           selected: isSelected,
                           onTap: () {
                             if (isSelected) {

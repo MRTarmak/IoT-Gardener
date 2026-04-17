@@ -9,7 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.0
   wifi_iot: ^0.3.19+1
   mqtt_client: ^10.5.1
   shared_preferences: ^2.5.5
