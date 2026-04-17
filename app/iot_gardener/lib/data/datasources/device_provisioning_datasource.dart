@@ -100,9 +100,9 @@ class DeviceProvisioningDatasource {
         },
       );
 
-      const probeMessage = 'PING\r\n';
+      const message = 'PING';
       final sentBytes = socket.send(
-        utf8.encode(probeMessage),
+        utf8.encode(message),
         InternetAddress(deviceApIp),
         devicePort,
       );
