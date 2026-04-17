@@ -12,4 +12,8 @@ class ProvisionDevice {
   }) {
     return repository.sendWifiCredentials(ssid: ssid, password: password);
   }
+
+  Future<bool> isDeviceReachable() {
+    return repository.isDeviceReachable();
+  }
 }

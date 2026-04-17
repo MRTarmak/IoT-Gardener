@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../data/repositories_impl/device_provisioning_repository_impl.dart';
 import '../../domain/entities/provisioning_result.dart';
 import '../../domain/usecases/provision_device.dart';
-import '../../data/datasources/device_provisioning_datasource_impl.dart';
-import '../../data/repositories_impl/device_provisioning_repository_impl.dart';
+import '../../data/datasources/device_provisioning_datasource.dart';
 
 class ProvisioningScreen extends StatefulWidget {
   const ProvisioningScreen({super.key});
@@ -17,7 +17,7 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
   final _passwordController = TextEditingController();
 
   final _usecase = ProvisionDevice(
-    DeviceProvisioningRepositoryImpl(DeviceProvisioningDatasourceImpl()),
+    DeviceProvisioningRepositoryImpl(DeviceProvisioningDatasource()),
   );
 
   _ProvisioningStep _currentStep = _ProvisioningStep.connectToDevice;
@@ -64,8 +64,7 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
       _errorMessage = null;
     });
 
-    final reachable = await DeviceProvisioningDatasourceImpl()
-        .isDeviceReachable();
+    final reachable = await _usecase.isDeviceReachable();
 
     if (!mounted) return;
 
@@ -150,7 +149,7 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
         const SizedBox(height: 12),
         const Text(
           'Откройте настройки Wi-Fi на телефоне и подключитесь к сети '
-          'с именем «IoT-Gardener-XXXX». После этого вернитесь в приложение '
+          'с именем «ESP_Config». После этого вернитесь в приложение '
           'и нажмите кнопку ниже.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.black54),
