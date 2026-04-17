@@ -43,7 +43,7 @@ class DeviceProvisioningDatasource {
         }
       });
 
-      final message = "WIFI_PROVISION\r\nSSID=$ssid\r\nPASS=$password\r\n";
+      final message = '$ssid\r\n$password\r\n';
       final List<int> data = utf8.encode(message);
 
       final sentBytes = socket.send(
