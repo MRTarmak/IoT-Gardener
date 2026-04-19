@@ -25,10 +25,10 @@ fi
 EXTRA_FLAGS="$@"
 
 # Check env
-check_env "$EMQX_ENDPOINT" "EMQX_ENDPOINT"
-check_env "$EMQX_PORT" "EMQX_PORT"
-check_env "$EMQX_USERNAME" "EMQX_USERNAME"
-check_env "$EMQX_PASSWORD" "EMQX_PASSWORD"
+check_env "$MQ_ENDPOINT" "MQ_ENDPOINT"
+check_env "$MQ_PORT" "MQ_PORT"
+check_env "$MQ_USERNAME" "MQ_USERNAME"
+check_env "$MQ_PASSWORD" "MQ_PASSWORD"
 check_env "$PORT" "PORT"
 
 #
@@ -37,10 +37,10 @@ check_env "$PORT" "PORT"
 
 COMPILE_CMD=(arduino-cli compile --fqbn "$FQBN" --libraries "$LIBRARIES_DIR")
 
-MACRO_FLAGS="-DMQ_ENDPOINT=\$EMQX_ENDPOINT "
-MACRO_FLAGS+="-DMQ_PORT=$EMQX_PORT "
-MACRO_FLAGS+="-DMQ_USERNAME=$EMQX_USERNAME "
-MACRO_FLAGS+="-DMQ_PASSWORD=$EMQX_PASSWORD "
+MACRO_FLAGS="-DMQ_ENDPOINT=$MQ_ENDPOINT "
+MACRO_FLAGS+="-DMQ_PORT=$MQ_PORT "
+MACRO_FLAGS+="-DMQ_USERNAME=$MQ_USERNAME "
+MACRO_FLAGS+="-DMQ_PASSWORD=$MQ_PASSWORD "
 
 
 COMPILE_CMD+=(--build-property "compiler.cpp.extra_flags=$MACRO_FLAGS")
@@ -65,11 +65,13 @@ echo "COMPILATION SUCCESS"
 #
 
 echo ""
-echo "=== ВНИМАНИЕ: РУЧНОЙ ПЕРЕХОД В РЕЖИМ ПРОШИВКИ ==="
-echo "1. Убедись, что на Arduino UNO стоит перемычка RESET -> GND"
-echo "2. Подключи пин GPIO0 на ESP-01 к GND"
-echo "3. Кратковременно передерни питание ESP-01 (или коснись пином RST земли)"
-read -p "Нажми Enter, когда будешь готов к прошивке..."
+echo "=== WARNING: MANUALLY SWITCH TO UPLOADING MODE  ==="
+echo "1. Make sure that Arduino UNO has RESET -> GND bridge"
+echo "2. Disable power supply on Arduino UNO and ESP01"
+echo "3. Connect ESP01's GPIO0 pin to GND"
+echo "4. Enable power supply"
+echo "5. Connect ESP01's GPIO0 pin to 3.3V via 220 Ohm pull-up resistor"
+read -p "Press ENTER to contiue with uploading..."
 
 echo ""
 echo "=== UPLOADING TO $PORT === "
@@ -93,20 +95,4 @@ fi
 rm -f errors.txt
 echo "UPLOADING SUCCESS"
 
-#
-# Serial monitor
-#
-
-echo ""
-echo "=== ВНИМАНИЕ: ПЕРЕХОД В РАБОЧИЙ РЕЖИМ ==="
-echo "1. ОТКЛЮЧИ пин GPIO0 от GND (переведи на 3.3V)"
-echo "2. Кратковременно передерни питание ESP-01 (рестарт)"
-read -p "Открыть Serial Monitor на $PORT? (y/N): " OPEN_MONITOR
-
-if [[ "$OPEN_MONITOR" =~ ^[Yy]$ ]]; then
-    BAUDRATE=74880
-    echo ""
-    echo "=== Serial Monitor ($PORT @ $BAUDRATE baud) ==="
-    echo "Press Ctrl+C to exit."
-    arduino-cli monitor -p "$PORT" --config baudrate="$BAUDRATE"
-fi
+./serial_monitor
