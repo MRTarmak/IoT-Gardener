@@ -24,12 +24,6 @@ fi
 
 EXTRA_FLAGS="$@"
 
-
-check_env "$EMQX_ENDPOINT" "EMQX_ENDPOINT"
-check_env "$EMQX_PORT" "EMQX_PORT"
-check_env "$EMQX_USERNAME" "EMQX_USERNAME"
-check_env "$EMQX_PASSWORD" "EMQX_PASSWORD"
-
 #
 # Compile
 #
@@ -37,18 +31,14 @@ check_env "$EMQX_PASSWORD" "EMQX_PASSWORD"
 # Base compilation command
 COMPILE_CMD=(arduino-cli compile --fqbn "$FQBN" --libraries "$LIBRARIES_DIR")
 
-MACRO_FLAGS="-DMQ_ENDPOINT=$EMQX_ENDPOINT "
-MACRO_FLAGS+="-DMQ_PORT=$EMQX_PORT "
-MACRO_FLAGS+="-DMQ_USERNAME=$EMQX_USERNAME "
-MACRO_FLAGS+="-DMQ_PASSWORD=$EMQX_PASSWORD "
-
 if [ -n "$EXTRA_FLAGS" ]; then
     echo "Using extra flags: $EXTRA_FLAGS"
     MACRO_FLAGS+="$EXTRA_FLAGS"
 fi
 
-COMPILE_CMD+=(--build-property "build.extra_flags=$MACRO_FLAGS")
-
+if [ -n "$MACRO_FLAGS" ]; then
+    COMPILE_CMD+=(--build-property "build.extra_flags=$MACRO_FLAGS")
+fi
 
 COMPILE_CMD+=("$SKETCH_DIR")
 
@@ -84,12 +74,4 @@ fi
 
 echo "UPLOADING SUCCESS"
 
-BAUDRATE=115200
-echo""
-read -p "Open Serial Monitor on $PORT? (y/N): " OPEN_MONITOR
-if [[ "$OPEN_MONITOR" =~ ^[Yy]$ ]]; then
-    echo ""
-    echo "=== Serial Monitor ($PORT @ $BAUDRATE baud) ==="
-    echo "Press Ctrl+C to exit."
-    arduino-cli monitor -p "$PORT" --config baudrate="$BAUDRATE"
-fi
+./serial_monitor
