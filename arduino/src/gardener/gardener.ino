@@ -14,7 +14,7 @@ enum SystemState : uint8_t
 {
     STATE_AP_PROVISIONING = 0,
     STATE_CONNECTING_WIFI = 1,
-    STATE_MQTT_READY = 2,
+    STATE_READY = 2,
 };
 
 SoftwareSerial esp01(RX_PIN, TX_PIN);
