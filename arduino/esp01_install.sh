@@ -106,4 +106,4 @@ fi
 rm -f errors.txt
 echo "UPLOADING SUCCESS"
 
-./serial_monitor
+./serial_monitor.sh

@@ -36,6 +36,7 @@ const char *mqtt_username = STRINGIFY_MACRO(MQ_USERNAME);
 const char *mqtt_password = STRINGIFY_MACRO(MQ_PASSWORD);
 const int mqtt_port = MQ_PORT;
 const char *mqtt_topic = "/gardener/telemetry";
+const char *mqtt_heartbeat_topic = "/gardener/heartbeat";
 const char *ntp_server = "pool.ntp.org";
 const long gmt_offset_sec = TZ_OFFSET;
 const int daylight_offset_sec = 0;
@@ -116,6 +117,12 @@ void announceState(bool force = false)
         break;
     case STATE_READY:
         Serial.println("STATE:READY");
+
+        if (mqtt_client.connected())
+        {
+            mqtt_client.publish(mqtt_heartbeat_topic, "HEARTBEAT");
+        }
+
         break;
     }
 
@@ -262,10 +269,10 @@ void handleUART()
             clearCreds();
             ESP.restart();
         }
-        // else if (msg.startsWith("TLM|") && currentState == STATE_READY)
-        // {
-        //   mqtt.publish(TOPIC_TELEMETRY, msg.c_str());
-        // }
+        else if (msg.startsWith("TLM:") && currentState == STATE_READY && mqtt_client.connected())
+        {
+            mqtt_client.publish(mqtt_topic, msg.c_str() + 4);
+        }
     }
 }
 
@@ -279,6 +286,8 @@ void syncTime()
         delay(1000);
         Serial.print(".");
     }
+
+    Serial.println(" Done!");
 
     Serial.println("LOG: Time synchronized");
     struct tm timeinfo;

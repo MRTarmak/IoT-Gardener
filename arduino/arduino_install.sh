@@ -50,7 +50,6 @@ echo "${COMPILE_CMD[@]}"
 
 if [ $? -ne 0 ]; then
     echo "COMPILATION ERROR"
-    
     exit 1
 fi
 
@@ -74,4 +73,4 @@ fi
 
 echo "UPLOADING SUCCESS"
 
-./serial_monitor
+./serial_monitor.sh
