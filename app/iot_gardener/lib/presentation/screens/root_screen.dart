@@ -89,6 +89,13 @@ class _RootScreenState extends State<RootScreen> {
 
   Future<void> _disconnectMqtt() async {
     await widget.mqttDevice.disconnect();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isConnected = false;
+      _telemetry = null;
+    });
   }
 
   void _openSettingsTab() {
