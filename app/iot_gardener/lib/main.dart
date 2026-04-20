@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:iot_gardener/domain/usecases/monitoring_profiles_device.dart';
 
 import 'data/datasources/mqtt_telemetry_datasource.dart';
@@ -7,7 +8,9 @@ import 'data/repositories_impl/mqtt_telemetry_repository_impl.dart';
 import 'domain/usecases/mqtt_device.dart';
 import 'presentation/screens/root_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: 'assets/env/.env');
   runApp(const MainApp());
 }
 

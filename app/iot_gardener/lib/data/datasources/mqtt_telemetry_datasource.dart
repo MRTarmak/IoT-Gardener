@@ -1,13 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
-import '../../domain/entities/mqtt_connection_params.dart';
 import '../../domain/entities/telemetry_data.dart';
 
 class MqttTelemetryDatasource {
+  static String get _mqEndpoint => dotenv.env['MQ_ENDPOINT'] ?? '';
+  static int get _mqPort => int.tryParse(dotenv.env['MQ_PORT'] ?? '') ?? 0;
+  static String get _mqUsername => dotenv.env['MQ_USERNAME'] ?? '';
+  static String get _mqPassword => dotenv.env['MQ_PASSWORD'] ?? '';
+  static String get _topic => dotenv.env['MQ_TOPIC'] ?? '';
+  static const String _pemPath = 'assets/certs/dash-wqtt-ru.pem';
+
   MqttServerClient? _client;
   StreamSubscription<List<MqttReceivedMessage<MqttMessage?>>>? _subscription;
 
@@ -17,18 +26,40 @@ class MqttTelemetryDatasource {
   Stream<TelemetryData> get telemetryStream => _telemetryController.stream;
   Stream<bool> get connectionStream => _connectionController.stream;
 
-  Future<bool> connect(MqttConnectionParams params) async {
+  Future<bool> connect() async {
     await disconnect();
 
-    final client = MqttServerClient(params.host, params.clientId)
-      ..port = params.port
+    if (_mqEndpoint.isEmpty ||
+        _mqPort <= 0 ||
+        _mqUsername.isEmpty ||
+        _mqPassword.isEmpty ||
+        _topic.isEmpty ||
+        _pemPath.isEmpty) {
+      _connectionController.add(false);
+      return false;
+    }
+
+    late final SecurityContext securityContext;
+    try {
+      final certBytes = (await rootBundle.load(_pemPath)).buffer.asUint8List();
+      securityContext = SecurityContext.defaultContext;
+      securityContext.setTrustedCertificatesBytes(certBytes);
+    } catch (_) {
+      _connectionController.add(false);
+      return false;
+    }
+
+    final client = MqttServerClient(_mqEndpoint, _mqUsername)
+      ..port = _mqPort
       ..keepAlivePeriod = 30
-      ..secure = false
+      ..secure = true
+      ..securityContext = securityContext
       ..logging(on: false)
       ..autoReconnect = true;
 
     client.connectionMessage = MqttConnectMessage()
-        .withClientIdentifier(params.clientId)
+        .withClientIdentifier(_mqUsername)
+        .authenticateAs(_mqUsername, _mqPassword)
         .startClean()
         .withWillQos(MqttQos.atMostOnce);
 
@@ -41,7 +72,7 @@ class MqttTelemetryDatasource {
         return false;
       }
 
-      client.subscribe(params.topic, MqttQos.atLeastOnce);
+      client.subscribe(_topic, MqttQos.atLeastOnce);
 
       _subscription = client.updates?.listen((messages) {
         if (messages.isEmpty) return;

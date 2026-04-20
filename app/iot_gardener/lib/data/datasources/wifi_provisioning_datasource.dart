@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import '../../domain/entities/provisioning_result.dart';
+import '../../domain/entities/wifi_provisioning_result.dart';
 
-class DeviceProvisioningDatasource {
-  static const String deviceApIp = '192.168.4.1';
-  static const int devicePort = 8888;
+class WifiProvisioningDatasource {
+  static const String _deviceApIp = '192.168.4.1';
+  static const int _devicePort = 8888;
 
-  Future<ProvisioningResult> sendWifiCredentials({
+  Future<WifiProvisioningResult> sendWifiCredentials({
     required String ssid,
     required String password,
   }) async {
@@ -16,7 +16,7 @@ class DeviceProvisioningDatasource {
     try {
       socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
 
-      final completer = Completer<ProvisioningResult>();
+      final completer = Completer<WifiProvisioningResult>();
 
       socket.listen((RawSocketEvent event) {
         if (event != RawSocketEvent.read || completer.isCompleted) {
@@ -29,7 +29,7 @@ class DeviceProvisioningDatasource {
         }
 
         final isExpectedSender =
-            packet.address.address == deviceApIp && packet.port == devicePort;
+            packet.address.address == _deviceApIp && packet.port == _devicePort;
         if (!isExpectedSender) {
           return;
         }
@@ -37,9 +37,9 @@ class DeviceProvisioningDatasource {
         final response = utf8.decode(packet.data);
 
         if (response.trim() == "OK") {
-          completer.complete(ProvisioningResult.success);
+          completer.complete(WifiProvisioningResult.success);
         } else {
-          completer.complete(ProvisioningResult.deviceError);
+          completer.complete(WifiProvisioningResult.deviceError);
         }
       });
 
@@ -48,19 +48,19 @@ class DeviceProvisioningDatasource {
 
       final sentBytes = socket.send(
         data,
-        InternetAddress(deviceApIp),
-        devicePort,
+        InternetAddress(_deviceApIp),
+        _devicePort,
       );
       if (sentBytes <= 0) {
-        return ProvisioningResult.connectionFailed;
+        return WifiProvisioningResult.connectionFailed;
       }
 
       return await completer.future.timeout(
         const Duration(seconds: 5),
-        onTimeout: () => ProvisioningResult.connectionFailed,
+        onTimeout: () => WifiProvisioningResult.connectionFailed,
       );
     } catch (_) {
-      return ProvisioningResult.connectionFailed;
+      return WifiProvisioningResult.connectionFailed;
     } finally {
       socket?.close();
     }
@@ -85,9 +85,9 @@ class DeviceProvisioningDatasource {
           }
 
           final isExpectedSender =
-              packet.address.address == deviceApIp && packet.port == devicePort;
+              packet.address.address == _deviceApIp && packet.port == _devicePort;
           final payload = utf8.decode(packet.data).trim();
-          final isExpectedPayload = payload == 'PONG';
+          final isExpectedPayload = payload.contains('PONG');
 
           if (isExpectedSender && isExpectedPayload && !completer.isCompleted) {
             completer.complete(true);
@@ -103,8 +103,8 @@ class DeviceProvisioningDatasource {
       const message = 'PING';
       final sentBytes = socket.send(
         utf8.encode(message),
-        InternetAddress(deviceApIp),
-        devicePort,
+        InternetAddress(_deviceApIp),
+        _devicePort,
       );
       if (sentBytes <= 0) {
         return false;

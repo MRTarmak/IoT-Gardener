@@ -5,7 +5,6 @@ import 'package:iot_gardener/domain/usecases/monitoring_profiles_device.dart';
 import 'package:iot_gardener/presentation/screens/monitoring_profiles_screen.dart';
 
 import '../../domain/entities/monitoring_profile_params.dart';
-import '../../domain/entities/mqtt_connection_params.dart';
 import '../../domain/entities/telemetry_data.dart';
 import '../../domain/usecases/mqtt_device.dart';
 import 'home_screen.dart';
@@ -31,13 +30,6 @@ class _RootScreenState extends State<RootScreen> {
   bool _isConnecting = false;
   String? _settingsError;
   TelemetryData? _telemetry;
-
-  final _hostController = TextEditingController(text: 'broker.emqx.io');
-  final _portController = TextEditingController(text: '1883');
-  final _clientIdController = TextEditingController(text: 'iot_gardener_app');
-  final _topicController = TextEditingController(
-    text: 'iot-gardener/telemetry',
-  );
 
   StreamSubscription<bool>? _connectionSubscription;
   StreamSubscription<TelemetryData>? _telemetrySubscription;
@@ -70,38 +62,18 @@ class _RootScreenState extends State<RootScreen> {
     _connectionSubscription?.cancel();
     _telemetrySubscription?.cancel();
 
-    _hostController.dispose();
-    _portController.dispose();
-    _clientIdController.dispose();
-    _topicController.dispose();
-
     unawaited(widget.mqttDevice.dispose());
 
     super.dispose();
   }
 
   Future<bool> _connectMqtt() async {
-    final port = int.tryParse(_portController.text.trim());
-    if (port == null) {
-      setState(() {
-        _settingsError = 'Порт должен быть числом';
-      });
-      return false;
-    }
-
-    final params = MqttConnectionParams(
-      host: _hostController.text.trim(),
-      port: port,
-      clientId: _clientIdController.text.trim(),
-      topic: _topicController.text.trim(),
-    );
-
     setState(() {
       _isConnecting = true;
       _settingsError = null;
     });
 
-    final isConnected = await widget.mqttDevice.connect(params);
+    final isConnected = await widget.mqttDevice.connect();
 
     if (!mounted) return false;
 
@@ -186,10 +158,6 @@ class _RootScreenState extends State<RootScreen> {
             onOpenSettings: _openSettingsTab,
           ),
           SettingsScreen(
-            hostController: _hostController,
-            portController: _portController,
-            clientIdController: _clientIdController,
-            topicController: _topicController,
             isConnected: _isConnected,
             isConnecting: _isConnecting,
             error: _settingsError,

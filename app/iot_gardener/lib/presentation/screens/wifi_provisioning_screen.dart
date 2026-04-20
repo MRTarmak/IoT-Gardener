@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../data/repositories_impl/device_provisioning_repository_impl.dart';
-import '../../domain/entities/provisioning_result.dart';
-import '../../domain/usecases/provision_device.dart';
-import '../../data/datasources/device_provisioning_datasource.dart';
+import '../../data/repositories_impl/wifi_provisioning_repository_impl.dart';
+import '../../domain/entities/wifi_provisioning_result.dart';
+import '../../domain/usecases/wifi_provision_device.dart';
+import '../../data/datasources/wifi_provisioning_datasource.dart';
 
-class ProvisioningScreen extends StatefulWidget {
-  const ProvisioningScreen({super.key});
+class WifiProvisioningScreen extends StatefulWidget {
+  const WifiProvisioningScreen({super.key});
 
   @override
-  State<ProvisioningScreen> createState() => _ProvisioningScreenState();
+  State<WifiProvisioningScreen> createState() => _WifiProvisioningScreenState();
 }
 
-class _ProvisioningScreenState extends State<ProvisioningScreen> {
+class _WifiProvisioningScreenState extends State<WifiProvisioningScreen> {
   final _ssidController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  final _usecase = ProvisionDevice(
-    DeviceProvisioningRepositoryImpl(DeviceProvisioningDatasource()),
+  final _usecase = WifiProvisionDevice(
+    WifiProvisioningRepositoryImpl(WifiProvisioningDatasource()),
   );
 
   _ProvisioningStep _currentStep = _ProvisioningStep.connectToDevice;
@@ -101,17 +101,17 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
     if (!mounted) return;
 
     switch (result) {
-      case ProvisioningResult.success:
+      case WifiProvisioningResult.success:
         setState(() {
           _currentStep = _ProvisioningStep.done;
           _isLoading = false;
         });
-      case ProvisioningResult.deviceError:
+      case WifiProvisioningResult.deviceError:
         setState(() {
           _isLoading = false;
           _errorMessage = 'Устройство вернуло ошибку. Попробуйте ещё раз.';
         });
-      case ProvisioningResult.connectionFailed:
+      case WifiProvisioningResult.connectionFailed:
         setState(() {
           _isLoading = false;
           _errorMessage =

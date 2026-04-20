@@ -1,4 +1,3 @@
-import '../entities/mqtt_connection_params.dart';
 import '../entities/telemetry_data.dart';
 import '../repositories/mqtt_telemetry_repository.dart';
 
@@ -10,8 +9,8 @@ class MqttDevice {
   Stream<TelemetryData> get telemetryStream => _repository.telemetryStream;
   Stream<bool> get connectionStream => _repository.connectionStream;
 
-  Future<bool> connect(MqttConnectionParams params) {
-    return _repository.connect(params);
+  Future<bool> connect() {
+    return _repository.connect();
   }
 
   Future<void> disconnect() {
