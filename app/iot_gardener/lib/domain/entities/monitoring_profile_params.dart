@@ -5,7 +5,8 @@ class MonitoringProfileParams {
   final (double?, double?) soilMoistureRange;
   final (double?, double?) airHumidityRange;
   final (double?, double?) soilPhRange;
-  final (double?, double?) temperatureRange;
+  final (double?, double?) soilTemperatureRange;
+  final (double?, double?) airTemperatureRange;
   final (double?, double?) lightRange;
 
   const MonitoringProfileParams({
@@ -13,7 +14,8 @@ class MonitoringProfileParams {
     this.soilMoistureRange = (null, null),
     this.airHumidityRange = (null, null),
     this.soilPhRange = (null, null),
-    this.temperatureRange = (null, null),
+    this.soilTemperatureRange = (null, null),
+    this.airTemperatureRange = (null, null),
     this.lightRange = (null, null),
   });
 
@@ -23,7 +25,8 @@ class MonitoringProfileParams {
       soilMoistureRange: Converter.toRange(map['soilMoistureRange']),
       airHumidityRange: Converter.toRange(map['airHumidityRange']),
       soilPhRange: Converter.toRange(map['soilPhRange']),
-      temperatureRange: Converter.toRange(map['temperatureRange']),
+      soilTemperatureRange: Converter.toRange(map['soilTemperatureRange']),
+      airTemperatureRange: Converter.toRange(map['airTemperatureRange']),
       lightRange: Converter.toRange(map['lightRange']),
     );
   }

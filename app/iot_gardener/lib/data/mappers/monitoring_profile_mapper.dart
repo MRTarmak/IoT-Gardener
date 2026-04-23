@@ -13,9 +13,13 @@ class MonitoringProfileMapper {
         params.airHumidityRange.$2,
       ],
       'soilPhRange': [params.soilPhRange.$1, params.soilPhRange.$2],
-      'temperatureRange': [
-        params.temperatureRange.$1,
-        params.temperatureRange.$2,
+      'soilTemperatureRange': [
+        params.soilTemperatureRange.$1,
+        params.soilTemperatureRange.$2,
+      ],
+      'airTemperatureRange': [
+        params.airTemperatureRange.$1,
+        params.airTemperatureRange.$2,
       ],
       'lightRange': [params.lightRange.$1, params.lightRange.$2],
     };

@@ -13,8 +13,11 @@ class MonitoringProfileFormatter {
     final ph = _formatRange(profile.soilPhRange, '');
     if (ph != null) parts.add('pH: $ph');
 
-    final temp = _formatRange(profile.temperatureRange, '°C');
-    if (temp != null) parts.add('Темп: $temp');
+    final soilTemp = _formatRange(profile.soilTemperatureRange, '°C');
+    if (soilTemp != null) parts.add('Темп. почвы: $soilTemp');
+
+    final airTemp = _formatRange(profile.airTemperatureRange, '°C');
+    if (airTemp != null) parts.add('Темп. воздуха: $airTemp');
 
     final light = _formatRange(profile.lightRange, ' лк');
     if (light != null) parts.add('Свет: $light');
