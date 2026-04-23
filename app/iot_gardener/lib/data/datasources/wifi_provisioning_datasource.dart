@@ -66,12 +66,12 @@ class WifiProvisioningDatasource {
     }
   }
 
-  Future<bool> isDeviceReachable() async {
+  Future<List<String>?> checkConnection() async {
     RawDatagramSocket? socket;
 
     try {
       socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-      final completer = Completer<bool>();
+      final completer = Completer<List<String>?>();
 
       socket.listen(
         (RawSocketEvent event) {
@@ -87,15 +87,14 @@ class WifiProvisioningDatasource {
           final isExpectedSender =
               packet.address.address == _deviceApIp && packet.port == _devicePort;
           final payload = utf8.decode(packet.data).trim();
-          final isExpectedPayload = payload.contains('PONG');
 
-          if (isExpectedSender && isExpectedPayload && !completer.isCompleted) {
-            completer.complete(true);
+          if (isExpectedSender && !completer.isCompleted) {
+            completer.complete(parsePongPacket(payload));
           }
         },
         onError: (_) {
           if (!completer.isCompleted) {
-            completer.complete(false);
+            completer.complete(null);
           }
         },
       );
@@ -107,17 +106,34 @@ class WifiProvisioningDatasource {
         _devicePort,
       );
       if (sentBytes <= 0) {
-        return false;
+        return null;
       }
 
       return await completer.future.timeout(
         const Duration(seconds: 5),
-        onTimeout: () => false,
+        onTimeout: () => null,
       );
     } catch (_) {
-      return false;
+      return null;
     } finally {
       socket?.close();
     }
   }
+
+  List<String>? parsePongPacket(String payload) {
+  final normalized = payload.replaceAll('\r\n', '\n').trim();
+  if (normalized.isEmpty) return null;
+
+  final lines = normalized
+      .split('\n')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+
+  if (lines.isEmpty || lines.first != 'PONG') {
+    return null;
+  }
+
+  return lines.skip(1).toList();
+}
 }

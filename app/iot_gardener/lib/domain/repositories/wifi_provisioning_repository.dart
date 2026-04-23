@@ -6,5 +6,5 @@ abstract class WifiProvisioningRepository {
     required String password,
   });
 
-  Future<bool> isDeviceReachable();
+  Future<List<String>?> checkConnection();
 }

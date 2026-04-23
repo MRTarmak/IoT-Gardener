@@ -16,7 +16,7 @@ class WifiProvisioningRepositoryImpl implements WifiProvisioningRepository {
   }
 
   @override
-  Future<bool> isDeviceReachable() {
-    return datasource.isDeviceReachable();
+  Future<List<String>?> checkConnection() {
+    return datasource.checkConnection();
   }
 }

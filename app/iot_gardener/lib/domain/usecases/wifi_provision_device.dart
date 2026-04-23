@@ -13,7 +13,7 @@ class WifiProvisionDevice {
     return repository.sendWifiCredentials(ssid: ssid, password: password);
   }
 
-  Future<bool> isDeviceReachable() {
-    return repository.isDeviceReachable();
+  Future<List<String>?> checkConnection() {
+    return repository.checkConnection();
   }
 }
