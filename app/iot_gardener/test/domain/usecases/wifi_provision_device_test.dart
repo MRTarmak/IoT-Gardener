@@ -13,7 +13,7 @@ class MockWifiProvisioningRepository implements WifiProvisioningRepository {
   }
 
   @override
-  Future<bool> isDeviceReachable() async => true;
+  Future<List<String>?> checkConnection() async => ['device1'];
 }
 
 void main() {

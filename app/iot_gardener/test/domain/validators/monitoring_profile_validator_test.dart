@@ -38,7 +38,7 @@ void main() {
       const profile = MonitoringProfileParams(
         name: 'Valid',
         soilMoistureRange: (20, 80),
-        temperatureRange: (15, 27),
+        airTemperatureRange: (15, 27),
       );
 
       final result = MonitoringProfileValidator.validate(profile);

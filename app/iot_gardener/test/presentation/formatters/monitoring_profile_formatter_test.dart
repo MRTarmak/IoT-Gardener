@@ -17,12 +17,15 @@ void main() {
         name: 'Mixed',
         soilMoistureRange: (20, 40),
         airHumidityRange: (null, 70),
-        temperatureRange: (18.5, null),
+        airTemperatureRange: (18.5, null),
       );
 
       final text = MonitoringProfileFormatter.formatProfileDetails(profile);
 
-      expect(text, 'Почва: 20% - 40% · Воздух: <= 70% · Темп: >= 18.50°C');
+      expect(
+        text,
+        'Почва: 20% - 40% · Воздух: <= 70% · Темп. воздуха: >= 18.50°C',
+      );
     });
 
     test('formats decimals with two digits and integers without decimals', () {

@@ -79,7 +79,8 @@ void main() {
         soilMoisture: 10,
         airHumidity: 20,
         soilPh: 6.5,
-        temperature: 22,
+        soilTemperature: 21,
+        airTemperature: 22,
         light: 500,
         receivedAt: DateTime(2026, 1, 1),
       );
