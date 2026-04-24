@@ -21,6 +21,7 @@ public:
     virtual void handleInput(Input input) = 0;
     virtual Screen &changeScreen() = 0;
     virtual Screen &returnToPreviousScreen() = 0;
+    virtual ~Screen() = default;
 };
 
 class TelemetryScreen : public Screen
@@ -65,16 +66,17 @@ class SettingsScreen : public Screen
 {
     Screen &mainMenuScreen;
 
-public:
-    SettingsScreen(U8G2 &lcd, Screen &mainMenuScreen) : Screen(lcd), mainMenuScreen(mainMenuScreen) {};
-
-    enum Option {
+    enum Option
+    {
         Mode,
         CurrentNetwork,
         ResetNetwork
     } selectedOption = Option::Mode;
 
     const uint8_t optionsSize = 3;
+
+public:
+    SettingsScreen(U8G2 &lcd, Screen &mainMenuScreen) : Screen(lcd), mainMenuScreen(mainMenuScreen) {};
 
     void render() override
     {
@@ -89,7 +91,7 @@ public:
         lcd.drawFrame(0, 0, 128, 64);
 
         // Параметры текста
-        const int lineH = 12;      // шаг строк
+        const int lineH = 12; // шаг строк
         const int blockH = lineH * 3;
         const int topY = (64 - blockH) / 2; // верх блока трех строк
         const int y1 = topY + 10;           // baseline 1-й строки
@@ -146,7 +148,8 @@ public:
         case Input::Down:
             selectedOption = static_cast<Option>((selectedOption + 1) % optionsSize);
         case Input::Select:
-            if (selectedOption == Option::ResetNetwork) {
+            if (selectedOption == Option::ResetNetwork)
+            {
                 // TODO вызов сброса сети
             }
             break;
@@ -171,11 +174,8 @@ public:
 
 class MainMenuScreen : public Screen
 {
-public:
-    TelemetryScreen telemetryScreen;
-    SettingsScreen settingsScreen;
-
-    MainMenuScreen(U8G2 &lcd) : Screen(lcd), telemetryScreen(lcd, *this), settingsScreen(lcd, *this) {}
+    Screen &telemetryScreen;
+    Screen &settingsScreen;
 
     enum Option
     {
@@ -184,6 +184,11 @@ public:
     } selectedOption = Option::Telemetry;
 
     const uint8_t optionsSize = 2;
+
+public:
+    MainMenuScreen(U8G2 &lcd, Screen &telemetryScreen, Screen &settingsScreen) : Screen(lcd),
+                                                                                 telemetryScreen(telemetryScreen),
+                                                                                 settingsScreen(settingsScreen) {}
 
     void render() override
     {
@@ -197,7 +202,7 @@ public:
         lcd.drawFrame(0, 0, 128, 64);
 
         // Параметры текста
-        const int lineH = 12;      // шаг строк
+        const int lineH = 12; // шаг строк
         const int blockH = lineH * 2;
         const int topY = (64 - blockH) / 2; // верх блока двух строк
         const int y1 = topY + 10;           // baseline 1-й строки
