@@ -1,4 +1,6 @@
+#pragma once
 #include <stdexcept>
+#include <U8g2lib.h>
 
 enum Input
 {
