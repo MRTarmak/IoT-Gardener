@@ -24,8 +24,16 @@ public:
     virtual std::weak_ptr<Screen> returnToBackScreen() = 0;
     virtual ~Screen() = default;
 
-    void noScrollRender(const uint8_t itemsSize, const char *items[], uint8_t optionsSize, int selectedOption)
+    void noScrollRender(const uint8_t itemsSize, const char *items[], int selectedOption)
     {
+        // Validation
+        if (itemsSize == 0)
+            throw std::runtime_error("No items to display");
+        if (selectedOption < 0)
+            throw std::runtime_error("Invalid option selected");
+        if (selectedOption >= itemsSize)
+            throw std::runtime_error("Invalid option selected");
+
         lcd.clearBuffer();
         lcd.setFont(u8g2_font_6x10_tf);
 
@@ -36,51 +44,32 @@ public:
         const int lineH = 12; // line height
         const int blockH = lineH * 3;
         const int topY = (64 - blockH) / 2; // top of block of 3 lines
-        int *y = new int[itemsSize];
+
+        int x, y, w;
         for (int i = 0; i < itemsSize; i++)
         {
-            y[i] = topY + 10 + lineH * i;
-        }
+            // Baseline
+            y = topY + 10 + lineH * i;
 
-        // Centering on X
-        int *w = new int[itemsSize];
-        int *x = new int[itemsSize];
-        for (int i = 0; i < itemsSize; i++)
-        {
-            w[i] = lcd.getStrWidth(items[i]);
-            x[i] = (128 - w[i]) / 2;
-        }
+            // Centering on X
+            w = lcd.getStrWidth(items[i]);
+            x = (128 - w) / 2;
 
-        // Selected option validation
-        if (selectedOption >= optionsSize)
-        {
-            delete[] y;
-            delete[] w;
-            delete[] x;
-            throw std::runtime_error("Invalid option selected");
-        }
-
-        // Rendering
-        for (int i = 0; i < itemsSize; i++)
-        {
+            // Rendering
             if (i == selectedOption)
             {
-                lcd.drawBox(6, y[i] - 10, 116, 12);
+                lcd.drawBox(6, y - 10, 116, 12);
                 lcd.setDrawColor(0);
-                lcd.drawStr(x[i], y[i], items[i]);
+                lcd.drawStr(x, y, items[i]);
                 lcd.setDrawColor(1);
             }
             else
             {
-                lcd.drawStr(x[i], y[i], items[i]);
+                lcd.drawStr(x, y, items[i]);
             }
         }
 
         lcd.sendBuffer();
-
-        delete[] y;
-        delete[] w;
-        delete[] x;
     }
 };
 
@@ -122,6 +111,14 @@ public:
             "Air Temp.: ",
             "Light: "};
 
+        // Validation
+        if (itemsSize == 0)
+            throw std::runtime_error("No items to display");
+        if (selectedOption < 0)
+            throw std::runtime_error("Invalid option selected");
+        if (selectedOption >= itemsSize)
+            throw std::runtime_error("Invalid option selected");
+
         lcd.clearBuffer();
         lcd.setFont(u8g2_font_6x10_tf);
 
@@ -133,59 +130,50 @@ public:
         const int maxLines = 5;              // display 5 lines, 6th is hidden
         const int blockH = lineH * maxLines; // height of block of 5 lines
         const int topY = (64 - blockH) / 2;  // top of block of 3 lines
-        // basline, scrolled baseline
-        int y[itemsSize], sy[itemsSize];
-        for (int i = 0; i < maxLines; i++)
-        {
-            y[i] = topY + 10 + lineH * i;
-            sy[i + 1] = y[i];
-        }
-
-        // Centering on X
-        int w[itemsSize], x[itemsSize];
-        for (int i = 0; i < itemsSize; i++)
-        {
-            w[i] = lcd.getStrWidth(items[i]);
-            x[i] = (128 - w[i]) / 2;
-        }
-
-        // Selected option validation
-        if (selectedOption >= optionsSize)
-            throw std::runtime_error("Invalid option selected");
-
+        
         // Rendering
+        int x, y, w;
         for (int i = 0; i < itemsSize; i++)
         {
+            // Centering on X
+            w = lcd.getStrWidth(items[i]);
+            x = (128 - w) / 2;
+
+            // Rendering
             if (!isScrolled)
             {
                 if (i == 5)
                     continue; // 6-я строка скрыта
-                else if (i == static_cast<int>(selectedOption))
+
+                y = topY + 10 + lineH * i; // baseline
+                if (i == static_cast<int>(selectedOption))
                 {
-                    lcd.drawBox(6, y[i] - 10, 116, 12);
+                    lcd.drawBox(6, y - 10, 116, 12);
                     lcd.setDrawColor(0);
-                    lcd.drawStr(x[i], y[i], items[i]);
+                    lcd.drawStr(x, y, items[i]);
                     lcd.setDrawColor(1);
                 }
                 else
                 {
-                    lcd.drawStr(x[i], y[i], items[i]);
+                    lcd.drawStr(x, y, items[i]);
                 }
             }
             else
             {
                 if (i == 0)
                     continue; // 1-я строка скрыта
-                else if (i == static_cast<int>(selectedOption))
+
+                y = topY + 10 + lineH * (i - 1); // scrolled baseline
+                if (i == static_cast<int>(selectedOption))
                 {
-                    lcd.drawBox(6, sy[i] - 10, 116, 12);
+                    lcd.drawBox(6, y - 10, 116, 12);
                     lcd.setDrawColor(0);
-                    lcd.drawStr(x[i], sy[i], items[i]);
+                    lcd.drawStr(x, y, items[i]);
                     lcd.setDrawColor(1);
                 }
                 else
                 {
-                    lcd.drawStr(x[i], sy[i], items[i]);
+                    lcd.drawStr(x, y, items[i]);
                 }
             }
         }
@@ -262,7 +250,7 @@ public:
             "Current Network: ",
             "Reset Network"};
 
-        noScrollRender(itemsSize, items, optionsSize, static_cast<int>(selectedOption));
+        noScrollRender(itemsSize, items, static_cast<int>(selectedOption));
     };
 
     void handleInput(Input input) override
@@ -333,7 +321,7 @@ public:
             "Telemetry",
             "Settings"};
 
-        noScrollRender(itemsSize, items, optionsSize, static_cast<int>(selectedOption));
+        noScrollRender(itemsSize, items, static_cast<int>(selectedOption));
     };
 
     void handleInput(Input input) override
