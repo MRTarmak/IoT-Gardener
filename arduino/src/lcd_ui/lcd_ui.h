@@ -28,18 +28,126 @@ class TelemetryScreen : public Screen
 {
     Screen &mainMenuScreen;
 
+    enum Option
+    {
+        SoilMoisture,
+        AirHumidity,
+        SoilPh,
+        SoilTemperature,
+        AirTemperature,
+        Light
+    } selectedOption = Option::SoilMoisture;
+
+    const uint8_t optionsSize = 6;
+
+    bool isScrolled = false;
+
 public:
     TelemetryScreen(U8G2 &lcd, Screen &mainMenuScreen) : Screen(lcd), mainMenuScreen(mainMenuScreen) {};
 
-    // TODO Implement rendering logic for the telemetry screen
-    void render() override {};
+    // TODO добавить получение телеметрии
+    void render() override
+    {
+        const uint8_t itemsSize = 6;
+
+        const char *items[itemsSize] = {
+            "Soil Moisture: ",
+            "Air Humidity: ",
+            "Soil pH: ",
+            "Soil Temp.: ",
+            "Air Temp.: ",
+            "Light: "};
+
+        lcd.clearBuffer();
+        lcd.setFont(u8g2_font_6x10_tf);
+
+        // Внешняя рамка
+        lcd.drawFrame(0, 0, 128, 64);
+
+        // Параметры текста
+        const int lineH = 12;                // шаг строк
+        const int maxLines = 5;              // отображаем 5 строк, 6-я - скрытая
+        const int blockH = lineH * maxLines; // высота блока из 5 строк
+        const int topY = (64 - blockH) / 2;  // верх блока трех строк
+        // basline, scrolled baseline
+        int y[itemsSize], sy[itemsSize];
+        for (int i = 0; i < maxLines; i++)
+        {
+            y[i] = topY + 10 + lineH * i;
+            sy[i + 1] = y[i];
+        }
+
+        // Центрирование по X
+        int w[itemsSize], x[itemsSize];
+        for (int i = 0; i < itemsSize; i++)
+        {
+            w[i] = lcd.getStrWidth(items[i]);
+            x[i] = (128 - w[i]) / 2;
+        }
+
+        // Selected option validation
+        if (selectedOption >= optionsSize)
+            throw std::runtime_error("Invalid option selected");
+
+        // Rendering
+        int i = 0;
+        for (; i < itemsSize; i++)
+        {
+            if (!isScrolled)
+            {
+                if (i == 5)
+                    continue; // 6-я строка скрыта
+                else if (i == static_cast<int>(selectedOption))
+                {
+                    lcd.drawBox(6, y[i] - 10, 116, 12);
+                    lcd.setDrawColor(0);
+                    lcd.drawStr(x[i], y[i], items[i]);
+                    lcd.setDrawColor(1);
+                }
+                else
+                {
+                    lcd.drawStr(x[i], y[i], items[i]);
+                }
+            }
+            else
+            {
+                if (i == 0)
+                    continue; // 1-я строка скрыта
+                else if (i == static_cast<int>(selectedOption))
+                {
+                    lcd.drawBox(6, sy[i] - 10, 116, 12);
+                    lcd.setDrawColor(0);
+                    lcd.drawStr(x[i], sy[i], items[i]);
+                    lcd.setDrawColor(1);
+                }
+                else
+                {
+                    lcd.drawStr(x[i], sy[i], items[i]);
+                }
+            }
+        }
+
+        lcd.sendBuffer();
+    };
 
     void handleInput(Input input) override
     {
         switch (input)
         {
         case Input::Up:
+            selectedOption = static_cast<Option>((selectedOption - 1 + optionsSize) % optionsSize);
+            if (isScrolled && selectedOption == Option::SoilMoisture)
+            {
+                isScrolled = false;
+            }
+            break;
         case Input::Down:
+            selectedOption = static_cast<Option>((selectedOption + 1) % optionsSize);
+            if (!isScrolled && selectedOption == Option::Light)
+            {
+                isScrolled = true;
+            }
+            break;
         case Input::Select:
             break;
         case Input::Back:
@@ -145,8 +253,10 @@ public:
         {
         case Input::Up:
             selectedOption = static_cast<Option>((selectedOption - 1 + optionsSize) % optionsSize);
+            break;
         case Input::Down:
             selectedOption = static_cast<Option>((selectedOption + 1) % optionsSize);
+            break;
         case Input::Select:
             if (selectedOption == Option::ResetNetwork)
             {
