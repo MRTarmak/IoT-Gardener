@@ -32,8 +32,10 @@ class _AddMonitoringProfileDialogState
   final _airMaxController = TextEditingController();
   final _phMinController = TextEditingController();
   final _phMaxController = TextEditingController();
-  final _tempMinController = TextEditingController();
-  final _tempMaxController = TextEditingController();
+  final _soilTempMinController = TextEditingController();
+  final _soilTempMaxController = TextEditingController();
+  final _airTempMinController = TextEditingController();
+  final _airTempMaxController = TextEditingController();
   final _lightMinController = TextEditingController();
   final _lightMaxController = TextEditingController();
 
@@ -48,8 +50,10 @@ class _AddMonitoringProfileDialogState
     _airMaxController.dispose();
     _phMinController.dispose();
     _phMaxController.dispose();
-    _tempMinController.dispose();
-    _tempMaxController.dispose();
+    _soilTempMinController.dispose();
+    _soilTempMaxController.dispose();
+    _airTempMinController.dispose();
+    _airTempMaxController.dispose();
     _lightMinController.dispose();
     _lightMaxController.dispose();
     super.dispose();
@@ -84,9 +88,13 @@ class _AddMonitoringProfileDialogState
         _parseOptionalDouble(_phMinController.text),
         _parseOptionalDouble(_phMaxController.text),
       ),
-      temperatureRange: (
-        _parseOptionalDouble(_tempMinController.text),
-        _parseOptionalDouble(_tempMaxController.text),
+      soilTemperatureRange: (
+        _parseOptionalDouble(_soilTempMinController.text),
+        _parseOptionalDouble(_soilTempMaxController.text),
+      ),
+      airTemperatureRange: (
+        _parseOptionalDouble(_airTempMinController.text),
+        _parseOptionalDouble(_airTempMaxController.text),
       ),
       lightRange: (
         _parseOptionalDouble(_lightMinController.text),
@@ -200,9 +208,14 @@ class _AddMonitoringProfileDialogState
                 maxController: _phMaxController,
               ),
               _buildRangeFields(
-                label: 'Температура (°C)',
-                minController: _tempMinController,
-                maxController: _tempMaxController,
+                label: 'Температура почвы (°C)',
+                minController: _soilTempMinController,
+                maxController: _soilTempMaxController,
+              ),
+              _buildRangeFields(
+                label: 'Температура воздуха (°C)',
+                minController: _airTempMinController,
+                maxController: _airTempMaxController,
               ),
               _buildRangeFields(
                 label: 'Освещенность (лк)',

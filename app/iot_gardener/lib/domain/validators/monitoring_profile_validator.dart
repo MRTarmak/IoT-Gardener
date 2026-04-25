@@ -9,8 +9,10 @@ class MonitoringProfileValidator {
       params.airHumidityRange.$2,
       params.soilPhRange.$1,
       params.soilPhRange.$2,
-      params.temperatureRange.$1,
-      params.temperatureRange.$2,
+      params.soilTemperatureRange.$1,
+      params.soilTemperatureRange.$2,
+      params.airTemperatureRange.$1,
+      params.airTemperatureRange.$2,
       params.lightRange.$1,
       params.lightRange.$2,
     ].any((value) => value != null);
@@ -28,7 +30,8 @@ class MonitoringProfileValidator {
     if (invalidRange(params.soilMoistureRange) ||
         invalidRange(params.airHumidityRange) ||
         invalidRange(params.soilPhRange) ||
-        invalidRange(params.temperatureRange) ||
+        invalidRange(params.soilTemperatureRange) ||
+        invalidRange(params.airTemperatureRange) ||
         invalidRange(params.lightRange)) {
       return 'Максимальное значение не может быть меньше минимального';
     }
@@ -56,9 +59,14 @@ class MonitoringProfileValidator {
       return 'Кислотность pH должна быть в диапазоне 0..14';
     }
 
-    if (belowMin(params.temperatureRange.$1, -273.15) ||
-        belowMin(params.temperatureRange.$2, -273.15)) {
-      return 'Температура не может быть ниже -273.15°C';
+    if (belowMin(params.soilTemperatureRange.$1, -273.15) ||
+        belowMin(params.soilTemperatureRange.$2, -273.15)) {
+      return 'Температура почвы не может быть ниже -273.15°C';
+    }
+
+    if (belowMin(params.airTemperatureRange.$1, -273.15) ||
+        belowMin(params.airTemperatureRange.$2, -273.15)) {
+      return 'Температура воздуха не может быть ниже -273.15°C';
     }
 
     if (belowMin(params.lightRange.$1, 0) ||

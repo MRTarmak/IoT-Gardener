@@ -74,9 +74,12 @@ class HomeScreen extends StatelessWidget {
         _isOutOfRange(telemetry!.airHumidity, profile.airHumidityRange);
     final phOut =
         profile != null && _isOutOfRange(telemetry!.soilPh, profile.soilPhRange);
-    final tempOut =
+    final soilTempOut =
         profile != null &&
-        _isOutOfRange(telemetry!.temperature, profile.temperatureRange);
+        _isOutOfRange(telemetry!.soilTemperature, profile.soilTemperatureRange);
+    final airTempOut =
+        profile != null &&
+        _isOutOfRange(telemetry!.airTemperature, profile.airTemperatureRange);
     final lightOut =
         profile != null && _isOutOfRange(telemetry!.light, profile.lightRange);
 
@@ -84,7 +87,8 @@ class HomeScreen extends StatelessWidget {
       if (soilOut) 'влажность почвы',
       if (airOut) 'влажность воздуха',
       if (phOut) 'pH почвы',
-      if (tempOut) 'температура',
+      if (soilTempOut) 'температура почвы',
+      if (airTempOut) 'температура воздуха',
       if (lightOut) 'освещенность',
     ];
 
@@ -143,10 +147,16 @@ class HomeScreen extends StatelessWidget {
             isOutOfRange: phOut,
           ),
           TelemetryTile(
-            label: 'Температура',
-            value: '${telemetry!.temperature.toStringAsFixed(1)} °C',
+            label: 'Температура почвы',
+            value: '${telemetry!.soilTemperature.toStringAsFixed(1)} °C',
             icon: Icons.thermostat,
-            isOutOfRange: tempOut,
+            isOutOfRange: soilTempOut,
+          ),
+          TelemetryTile(
+            label: 'Температура воздуха',
+            value: '${telemetry!.airTemperature.toStringAsFixed(1)} °C',
+            icon: Icons.thermostat,
+            isOutOfRange: airTempOut,
           ),
           TelemetryTile(
             label: 'Освещенность',

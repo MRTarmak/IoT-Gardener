@@ -4,7 +4,8 @@ class TelemetryData {
   final double soilMoisture;
   final double airHumidity;
   final double soilPh;
-  final double temperature;
+  final double soilTemperature;
+  final double airTemperature;
   final double light;
   final DateTime receivedAt;
 
@@ -12,7 +13,8 @@ class TelemetryData {
     required this.soilMoisture,
     required this.airHumidity,
     required this.soilPh,
-    required this.temperature,
+    required this.soilTemperature,
+    required this.airTemperature,
     required this.light,
     required this.receivedAt,
   });
@@ -22,7 +24,8 @@ class TelemetryData {
       soilMoisture: Converter.toDouble(map['soilMoisture']),
       airHumidity: Converter.toDouble(map['airHumidity']),
       soilPh: Converter.toDouble(map['soilPh']),
-      temperature: Converter.toDouble(map['temperature']),
+      soilTemperature: Converter.toDouble(map['soilTemperature']),
+      airTemperature: Converter.toDouble(map['airTemperature']),
       light: Converter.toDouble(map['light']),
       receivedAt: DateTime.now(),
     );

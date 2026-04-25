@@ -9,10 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.0
   wifi_iot: ^0.3.19+1
   mqtt_client: ^10.5.1
   shared_preferences: ^2.5.5
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -28,4 +28,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/env/.env
+    - assets/certs/dash-wqtt-ru.pem
     - assets/icons/iot_gardener_icon.png

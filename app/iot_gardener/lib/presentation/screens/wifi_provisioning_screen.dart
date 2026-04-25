@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../domain/entities/provisioning_result.dart';
-import '../../domain/usecases/provision_device.dart';
-import '../../data/datasources/device_provisioning_datasource_impl.dart';
-import '../../data/repositories_impl/device_provisioning_repository_impl.dart';
+import '../../data/repositories_impl/wifi_provisioning_repository_impl.dart';
+import '../../domain/entities/wifi_provisioning_result.dart';
+import '../../domain/usecases/wifi_provision_device.dart';
+import '../../data/datasources/wifi_provisioning_datasource.dart';
 
-class ProvisioningScreen extends StatefulWidget {
-  const ProvisioningScreen({super.key});
+class WifiProvisioningScreen extends StatefulWidget {
+  const WifiProvisioningScreen({super.key});
 
   @override
-  State<ProvisioningScreen> createState() => _ProvisioningScreenState();
+  State<WifiProvisioningScreen> createState() => _WifiProvisioningScreenState();
 }
 
-class _ProvisioningScreenState extends State<ProvisioningScreen> {
-  final _ssidController = TextEditingController();
+class _WifiProvisioningScreenState extends State<WifiProvisioningScreen> {
+  String? _selectedSsid;
   final _passwordController = TextEditingController();
 
-  final _usecase = ProvisionDevice(
-    DeviceProvisioningRepositoryImpl(DeviceProvisioningDatasourceImpl()),
+  final _usecase = WifiProvisionDevice(
+    WifiProvisioningRepositoryImpl(WifiProvisioningDatasource()),
   );
+
+  List<String>? _ssidList;
 
   _ProvisioningStep _currentStep = _ProvisioningStep.connectToDevice;
   bool _isLoading = false;
@@ -27,7 +29,6 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
 
   @override
   void dispose() {
-    _ssidController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -62,14 +63,15 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _selectedSsid = null;
+      _passwordController.clear();
     });
 
-    final reachable = await DeviceProvisioningDatasourceImpl()
-        .isDeviceReachable();
+    _ssidList = await _usecase.checkConnection();
 
     if (!mounted) return;
 
-    if (reachable) {
+    if (_ssidList != null) {
       setState(() {
         _currentStep = _ProvisioningStep.enterWifiCredentials;
         _isLoading = false;
@@ -84,8 +86,8 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
   }
 
   Future<void> _sendCredentials() async {
-    if (_ssidController.text.isEmpty) {
-      setState(() => _errorMessage = 'Введите название Wi-Fi сети');
+    if (_selectedSsid == null || _selectedSsid!.isEmpty) {
+      setState(() => _errorMessage = 'Выберите Wi-Fi сеть из списка');
       return;
     }
 
@@ -95,24 +97,24 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
     });
 
     final result = await _usecase(
-      ssid: _ssidController.text,
+      ssid: _selectedSsid!,
       password: _passwordController.text,
     );
 
     if (!mounted) return;
 
     switch (result) {
-      case ProvisioningResult.success:
+      case WifiProvisioningResult.success:
         setState(() {
           _currentStep = _ProvisioningStep.done;
           _isLoading = false;
         });
-      case ProvisioningResult.deviceError:
+      case WifiProvisioningResult.deviceError:
         setState(() {
           _isLoading = false;
           _errorMessage = 'Устройство вернуло ошибку. Попробуйте ещё раз.';
         });
-      case ProvisioningResult.connectionFailed:
+      case WifiProvisioningResult.connectionFailed:
         setState(() {
           _isLoading = false;
           _errorMessage =
@@ -150,7 +152,7 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
         const SizedBox(height: 12),
         const Text(
           'Откройте настройки Wi-Fi на телефоне и подключитесь к сети '
-          'с именем «IoT-Gardener-XXXX». После этого вернитесь в приложение '
+          'с именем «ESP_Config». После этого вернитесь в приложение '
           'и нажмите кнопку ниже.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.black54),
@@ -184,13 +186,16 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
   }
 
   Widget _buildCredentialsStep() {
+    final ssids = _ssidList;
+    final hasSsids = ssids != null && ssids.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Icon(Icons.wifi, size: 80, color: Colors.green),
         const SizedBox(height: 24),
         const Text(
-          'Введите данные вашей Wi-Fi сети',
+          'Выберите вашу Wi-Fi сеть в списке ниже',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
@@ -200,21 +205,60 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.black54),
         ),
-        const SizedBox(height: 24),
-        TextField(
-          controller: _ssidController,
-          decoration: const InputDecoration(
-            labelText: 'Название сети (SSID)',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.wifi),
+        const SizedBox(height: 16),
+        if (hasSsids)
+          Expanded(
+            child: ListView.builder(
+              itemCount: ssids.length,
+              itemBuilder: (context, index) {
+                final ssid = ssids[index];
+                final isSelected = ssid == _selectedSsid;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Material(
+                    color: isSelected
+                        ? Colors.green.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      title: Text(ssid),
+                      leading: const Icon(Icons.wifi),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedSsid = ssid;
+                          _errorMessage = null;
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          )
+        else
+          const Expanded(
+            child: Center(
+              child: Text(
+                'Что-то пошло не так, и мы не смогли получить список Wi-Fi сетей. Попробуйте снова.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.black54),
+              ),
+            ),
           ),
-        ),
         const SizedBox(height: 12),
         TextField(
           controller: _passwordController,
+          enabled: _selectedSsid != null,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            labelText: 'Пароль',
+            labelText: _selectedSsid == null
+                ? 'Сначала выберите сеть'
+                : 'Пароль для $_selectedSsid',
             border: const OutlineInputBorder(),
             prefixIcon: const Icon(Icons.lock),
             suffixIcon: IconButton(
@@ -226,7 +270,7 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
             ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(height: 12),
         if (_errorMessage != null) ...[
           Text(
             _errorMessage!,
@@ -236,7 +280,9 @@ class _ProvisioningScreenState extends State<ProvisioningScreen> {
           const SizedBox(height: 12),
         ],
         ElevatedButton(
-          onPressed: _isLoading ? null : _sendCredentials,
+          onPressed: _isLoading || _selectedSsid == null
+              ? null
+              : _sendCredentials,
           child: _isLoading
               ? const SizedBox(
                   height: 20,

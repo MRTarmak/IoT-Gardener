@@ -1,43 +1,47 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:iot_gardener/domain/entities/provisioning_result.dart';
-import 'package:iot_gardener/data/repositories_impl/device_provisioning_repository_impl.dart';
-import 'package:iot_gardener/data/datasources/device_provisioning_datasource.dart';
+import 'package:iot_gardener/domain/entities/wifi_provisioning_result.dart';
+import 'package:iot_gardener/domain/repositories/wifi_provisioning_repository.dart';
+import 'package:iot_gardener/data/repositories_impl/wifi_provisioning_repository_impl.dart';
+import 'package:iot_gardener/data/datasources/wifi_provisioning_datasource.dart';
 
-class MockDeviceProvisioningDatasource implements DeviceProvisioningDatasource {
-  ProvisioningResult result;
+class MockWifiProvisioningDatasource implements WifiProvisioningDatasource {
+  WifiProvisioningResult result;
   bool reachable;
-  MockDeviceProvisioningDatasource({required this.result, this.reachable = true});
+  MockWifiProvisioningDatasource({required this.result, this.reachable = true});
 
   @override
-  Future<ProvisioningResult> sendWifiCredentials({required String ssid, required String password}) async {
+  Future<WifiProvisioningResult> sendWifiCredentials({required String ssid, required String password}) async {
     return result;
   }
 
   @override
-  Future<bool> isDeviceReachable() async => reachable;
+  Future<List<String>?> checkConnection() async => reachable ? ['device1', 'device2'] : null;
+
+  @override
+  List<String>? parsePongPacket(String payload) => null;
 }
 
 void main() {
-  group('DeviceProvisioningRepositoryImpl', () {
+  group('WifiProvisioningRepositoryImpl', () {
     test('sendWifiCredentials returns correct result', () async {
-      final datasource = MockDeviceProvisioningDatasource(result: ProvisioningResult.success);
-      final repo = DeviceProvisioningRepositoryImpl(datasource);
+      final datasource = MockWifiProvisioningDatasource(result: WifiProvisioningResult.success);
+      final WifiProvisioningRepository repo = WifiProvisioningRepositoryImpl(datasource);
       final res = await repo.sendWifiCredentials(ssid: 'test', password: '1234');
-      expect(res, ProvisioningResult.success);
+      expect(res, WifiProvisioningResult.success);
     });
 
-    test('isDeviceReachable returns true', () async {
-      final datasource = MockDeviceProvisioningDatasource(result: ProvisioningResult.success, reachable: true);
-      final repo = DeviceProvisioningRepositoryImpl(datasource);
-      final res = await repo.isDeviceReachable();
-      expect(res, true);
+    test('checkConnection returns ssids when device is reachable', () async {
+      final datasource = MockWifiProvisioningDatasource(result: WifiProvisioningResult.success, reachable: true);
+      final WifiProvisioningRepository repo = WifiProvisioningRepositoryImpl(datasource);
+      final res = await repo.checkConnection();
+      expect(res, ['device1', 'device2']);
     });
 
-    test('isDeviceReachable returns false', () async {
-      final datasource = MockDeviceProvisioningDatasource(result: ProvisioningResult.success, reachable: false);
-      final repo = DeviceProvisioningRepositoryImpl(datasource);
-      final res = await repo.isDeviceReachable();
-      expect(res, false);
+    test('checkConnection returns null when device is unreachable', () async {
+      final datasource = MockWifiProvisioningDatasource(result: WifiProvisioningResult.success, reachable: false);
+      final WifiProvisioningRepository repo = WifiProvisioningRepositoryImpl(datasource);
+      final res = await repo.checkConnection();
+      expect(res, isNull);
     });
   });
 }
