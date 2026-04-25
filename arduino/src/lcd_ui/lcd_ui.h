@@ -22,6 +22,60 @@ public:
     virtual Screen &changeScreen() = 0;
     virtual Screen &returnToPreviousScreen() = 0;
     virtual ~Screen() = default;
+
+    void noScrollRender(const uint8_t itemsSize, const char *items[], uint8_t optionsSize, int selectedOption)
+    {
+        lcd.clearBuffer();
+        lcd.setFont(u8g2_font_6x10_tf);
+
+        // Outter frame
+        lcd.drawFrame(0, 0, 128, 64);
+
+        // Text parameters
+        const int lineH = 12; // line height
+        const int blockH = lineH * 3;
+        const int topY = (64 - blockH) / 2; // top of block of 3 lines
+        int *y = new int[itemsSize];
+        for (int i = 0; i < itemsSize; i++)
+        {
+            y[i] = topY + 10 + lineH * i;
+        }
+
+        // Centering on X
+        int *w = new int[itemsSize];
+        int *x = new int[itemsSize];
+        for (int i = 0; i < itemsSize; i++)
+        {
+            w[i] = lcd.getStrWidth(items[i]);
+            x[i] = (128 - w[i]) / 2;
+        }
+
+        // Selected option validation
+        if (selectedOption >= optionsSize)
+            throw std::runtime_error("Invalid option selected");
+
+        // Rendering
+        for (int i = 0; i < itemsSize; i++)
+        {
+            if (i == selectedOption)
+            {
+                lcd.drawBox(6, y[i] - 10, 116, 12);
+                lcd.setDrawColor(0);
+                lcd.drawStr(x[i], y[i], items[i]);
+                lcd.setDrawColor(1);
+            }
+            else
+            {
+                lcd.drawStr(x[i], y[i], items[i]);
+            }
+        }
+
+        lcd.sendBuffer();
+
+        delete[] y;
+        delete[] w;
+        delete[] x;
+    }
 };
 
 class TelemetryScreen : public Screen
@@ -49,7 +103,6 @@ public:
     void render() override
     {
         const uint8_t itemsSize = 6;
-
         const char *items[itemsSize] = {
             "Soil Moisture: ",
             "Air Humidity: ",
@@ -61,14 +114,14 @@ public:
         lcd.clearBuffer();
         lcd.setFont(u8g2_font_6x10_tf);
 
-        // Внешняя рамка
+        // Outter frame
         lcd.drawFrame(0, 0, 128, 64);
 
-        // Параметры текста
-        const int lineH = 12;                // шаг строк
-        const int maxLines = 5;              // отображаем 5 строк, 6-я - скрытая
-        const int blockH = lineH * maxLines; // высота блока из 5 строк
-        const int topY = (64 - blockH) / 2;  // верх блока трех строк
+        // Text parameters
+        const int lineH = 12;                // line height
+        const int maxLines = 5;              // display 5 lines, 6th is hidden
+        const int blockH = lineH * maxLines; // height of block of 5 lines
+        const int topY = (64 - blockH) / 2;  // top of block of 3 lines
         // basline, scrolled baseline
         int y[itemsSize], sy[itemsSize];
         for (int i = 0; i < maxLines; i++)
@@ -77,7 +130,7 @@ public:
             sy[i + 1] = y[i];
         }
 
-        // Центрирование по X
+        // Centering on X
         int w[itemsSize], x[itemsSize];
         for (int i = 0; i < itemsSize; i++)
         {
@@ -90,8 +143,7 @@ public:
             throw std::runtime_error("Invalid option selected");
 
         // Rendering
-        int i = 0;
-        for (; i < itemsSize; i++)
+        for (int i = 0; i < itemsSize; i++)
         {
             if (!isScrolled)
             {
@@ -188,63 +240,13 @@ public:
 
     void render() override
     {
-        const char *item1 = "Mode";
-        const char *item2 = "Current Network";
-        const char *item3 = "Reset Network";
+        const uint8_t itemsSize = 3;
+        const char *items[itemsSize] = {
+            "Mode: ",
+            "Current Network: ",
+            "Reset Network"};
 
-        lcd.clearBuffer();
-        lcd.setFont(u8g2_font_6x10_tf);
-
-        // Внешняя рамка
-        lcd.drawFrame(0, 0, 128, 64);
-
-        // Параметры текста
-        const int lineH = 12; // шаг строк
-        const int blockH = lineH * 3;
-        const int topY = (64 - blockH) / 2; // верх блока трех строк
-        const int y1 = topY + 10;           // baseline 1-й строки
-        const int y2 = y1 + lineH;          // baseline 2-й строки
-        const int y3 = y2 + lineH;          // baseline 3-й строки
-
-        // Центрирование по X
-        const int w1 = lcd.getStrWidth(item1);
-        const int w2 = lcd.getStrWidth(item2);
-        const int w3 = lcd.getStrWidth(item3);
-        const int x1 = (128 - w1) / 2;
-        const int x2 = (128 - w2) / 2;
-        const int x3 = (128 - w3) / 2;
-
-        switch (selectedOption)
-        {
-        case Option::Mode:
-            lcd.drawBox(6, y1 - 10, 116, 12); // плашка под 1-й строкой
-            lcd.setDrawColor(0);              // текст "вычитается" (белый на черном)
-            lcd.drawStr(x1, y1, item1);
-            lcd.setDrawColor(1);
-            lcd.drawStr(x2, y2, item2);
-            lcd.drawStr(x3, y3, item3);
-            break;
-        case Option::CurrentNetwork:
-            lcd.drawStr(x1, y1, item1);
-            lcd.drawBox(6, y2 - 10, 116, 12); // плашка под 2-й строкой
-            lcd.setDrawColor(0);
-            lcd.drawStr(x2, y2, item2);
-            lcd.setDrawColor(1);
-            lcd.drawStr(x3, y3, item3);
-            break;
-        case Option::ResetNetwork:
-            lcd.drawStr(x1, y1, item1);
-            lcd.drawStr(x2, y2, item2);
-            lcd.drawBox(6, y3 - 10, 116, 12); // плашка под 3-й строкой
-            lcd.setDrawColor(0);
-            lcd.drawStr(x3, y3, item3);
-            lcd.setDrawColor(1);
-            break;
-        default:
-            throw std::runtime_error("Invalid option selected");
-        }
-
-        lcd.sendBuffer();
+        noScrollRender(itemsSize, items, optionsSize, static_cast<int>(selectedOption));
     };
 
     void handleInput(Input input) override
@@ -302,48 +304,13 @@ public:
 
     void render() override
     {
-        const char *item1 = "Telemetry";
-        const char *item2 = "Settings";
+        const uint8_t itemsSize = 2;
+        const char *items[itemsSize] = {
+            "Telemetry",
+            "Settings"
+        };
 
-        lcd.clearBuffer();
-        lcd.setFont(u8g2_font_6x10_tf);
-
-        // Внешняя рамка
-        lcd.drawFrame(0, 0, 128, 64);
-
-        // Параметры текста
-        const int lineH = 12; // шаг строк
-        const int blockH = lineH * 2;
-        const int topY = (64 - blockH) / 2; // верх блока двух строк
-        const int y1 = topY + 10;           // baseline 1-й строки
-        const int y2 = y1 + lineH;          // baseline 2-й строки
-
-        // Центрирование по X
-        const int w1 = lcd.getStrWidth(item1);
-        const int w2 = lcd.getStrWidth(item2);
-        const int x1 = (128 - w1) / 2;
-        const int x2 = (128 - w2) / 2;
-
-        switch (selectedOption)
-        {
-        case Option::Telemetry:
-            lcd.drawBox(6, y1 - 10, 116, 12); // плашка под 1-й строкой
-            lcd.setDrawColor(0);              // текст "вычитается" (белый на черном)
-            lcd.drawStr(x1, y1, item1);
-            lcd.setDrawColor(1);
-            lcd.drawStr(x2, y2, item2);
-            break;
-        case Option::Settings:
-            lcd.drawStr(x1, y1, item1);
-            lcd.drawBox(6, y2 - 10, 116, 12); // плашка под 2-й строкой
-            lcd.setDrawColor(0);
-            lcd.drawStr(x2, y2, item2);
-            lcd.setDrawColor(1);
-
-        default:
-            throw std::runtime_error("Invalid option selected");
-        }
-        lcd.sendBuffer();
+        noScrollRender(itemsSize, items, optionsSize, static_cast<int>(selectedOption));
     };
 
     void handleInput(Input input) override
