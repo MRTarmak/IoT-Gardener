@@ -1,5 +1,6 @@
 #pragma once
 #include <stdexcept>
+#include <memory>
 #include <U8g2lib.h>
 
 enum Input
@@ -19,8 +20,8 @@ public:
     explicit Screen(U8G2 &lcd) : lcd(lcd) {};
     virtual void render() = 0;
     virtual void handleInput(Input input) = 0;
-    virtual Screen &changeScreen() = 0;
-    virtual Screen &returnToPreviousScreen() = 0;
+    virtual std::shared_ptr<Screen> changeScreen() = 0;
+    virtual std::weak_ptr<Screen> returnToBackScreen() = 0;
     virtual ~Screen() = default;
 
     void noScrollRender(const uint8_t itemsSize, const char *items[], uint8_t optionsSize, int selectedOption)
@@ -52,7 +53,12 @@ public:
 
         // Selected option validation
         if (selectedOption >= optionsSize)
+        {
+            delete[] y;
+            delete[] w;
+            delete[] x;
             throw std::runtime_error("Invalid option selected");
+        }
 
         // Rendering
         for (int i = 0; i < itemsSize; i++)
@@ -80,7 +86,7 @@ public:
 
 class TelemetryScreen : public Screen
 {
-    Screen &mainMenuScreen;
+    std::weak_ptr<Screen> mainMenuScreen;
 
     enum Option
     {
@@ -97,7 +103,12 @@ class TelemetryScreen : public Screen
     bool isScrolled = false;
 
 public:
-    TelemetryScreen(U8G2 &lcd, Screen &mainMenuScreen) : Screen(lcd), mainMenuScreen(mainMenuScreen) {};
+    TelemetryScreen(U8G2 &lcd) : Screen(lcd) {};
+
+    void setMainMenuScreen(std::weak_ptr<Screen> mainMenuScreen)
+    {
+        this->mainMenuScreen = mainMenuScreen;
+    }
 
     // TODO добавить получение телеметрии
     void render() override
@@ -203,19 +214,19 @@ public:
         case Input::Select:
             break;
         case Input::Back:
-            returnToPreviousScreen();
+            returnToBackScreen();
             break;
         default:
             throw std::runtime_error("Invalid input");
         }
     };
 
-    Screen &changeScreen() override
+    std::shared_ptr<Screen> changeScreen() override
     {
-        return *this;
+        return nullptr;
     };
 
-    Screen &returnToPreviousScreen() override
+    std::weak_ptr<Screen> returnToBackScreen() override
     {
         return mainMenuScreen;
     };
@@ -224,7 +235,7 @@ public:
 // TODO добавить получение текущего режима и сети
 class SettingsScreen : public Screen
 {
-    Screen &mainMenuScreen;
+    std::weak_ptr<Screen> mainMenuScreen;
 
     enum Option
     {
@@ -236,7 +247,12 @@ class SettingsScreen : public Screen
     const uint8_t optionsSize = 3;
 
 public:
-    SettingsScreen(U8G2 &lcd, Screen &mainMenuScreen) : Screen(lcd), mainMenuScreen(mainMenuScreen) {};
+    SettingsScreen(U8G2 &lcd) : Screen(lcd) {};
+
+    void setMainMenuScreen(std::weak_ptr<Screen> mainMenuScreen)
+    {
+        this->mainMenuScreen = mainMenuScreen;
+    }
 
     void render() override
     {
@@ -266,19 +282,19 @@ public:
             }
             break;
         case Input::Back:
-            returnToPreviousScreen();
+            returnToBackScreen();
             break;
         default:
             throw std::runtime_error("Invalid input");
         }
     };
 
-    Screen &changeScreen() override
+    std::shared_ptr<Screen> changeScreen() override
     {
-        return *this;
+        return nullptr;
     };
 
-    Screen &returnToPreviousScreen() override
+    std::weak_ptr<Screen> returnToBackScreen() override
     {
         return mainMenuScreen;
     };
@@ -286,8 +302,8 @@ public:
 
 class MainMenuScreen : public Screen
 {
-    Screen &telemetryScreen;
-    Screen &settingsScreen;
+    std::shared_ptr<Screen> telemetryScreen;
+    std::shared_ptr<Screen> settingsScreen;
 
     enum Option
     {
@@ -298,17 +314,24 @@ class MainMenuScreen : public Screen
     const uint8_t optionsSize = 2;
 
 public:
-    MainMenuScreen(U8G2 &lcd, Screen &telemetryScreen, Screen &settingsScreen) : Screen(lcd),
-                                                                                 telemetryScreen(telemetryScreen),
-                                                                                 settingsScreen(settingsScreen) {}
+    MainMenuScreen(U8G2 &lcd) : Screen(lcd) {}
+
+    void setTelemetryScreen(std::shared_ptr<Screen> telemetryScreen)
+    {
+        this->telemetryScreen = telemetryScreen;
+    }
+
+    void setSettingsScreen(std::shared_ptr<Screen> settingsScreen)
+    {
+        this->settingsScreen = settingsScreen;
+    }
 
     void render() override
     {
         const uint8_t itemsSize = 2;
         const char *items[itemsSize] = {
             "Telemetry",
-            "Settings"
-        };
+            "Settings"};
 
         noScrollRender(itemsSize, items, optionsSize, static_cast<int>(selectedOption));
     };
@@ -327,14 +350,14 @@ public:
             changeScreen();
             break;
         case Input::Back:
-            returnToPreviousScreen();
+            returnToBackScreen();
             break;
         default:
             throw std::runtime_error("Invalid input");
         }
     };
 
-    Screen &changeScreen() override
+    std::shared_ptr<Screen> changeScreen() override
     {
         switch (selectedOption)
         {
@@ -347,8 +370,33 @@ public:
         }
     };
 
-    Screen &returnToPreviousScreen() override
+    std::weak_ptr<Screen> returnToBackScreen() override
     {
-        return *this;
+        return std::weak_ptr<Screen>();
     };
+};
+
+class LCDUI
+{
+    U8G2 &lcd;
+    std::shared_ptr<Screen> mainMenuScreen;
+    std::shared_ptr<Screen> telemetryScreen;
+    std::shared_ptr<Screen> settingsScreen;
+
+    std::shared_ptr<Screen> currentScreen;
+
+public:
+    explicit LCDUI(U8G2 &lcd) : lcd(lcd)
+    {
+        mainMenuScreen = std::make_shared<MainMenuScreen>(lcd);
+        telemetryScreen = std::make_shared<TelemetryScreen>(lcd);
+        settingsScreen = std::make_shared<SettingsScreen>(lcd);
+
+        std::dynamic_pointer_cast<MainMenuScreen>(mainMenuScreen)->setTelemetryScreen(telemetryScreen);
+        std::dynamic_pointer_cast<MainMenuScreen>(mainMenuScreen)->setSettingsScreen(settingsScreen);
+        std::dynamic_pointer_cast<TelemetryScreen>(telemetryScreen)->setMainMenuScreen(mainMenuScreen);
+        std::dynamic_pointer_cast<SettingsScreen>(settingsScreen)->setMainMenuScreen(mainMenuScreen);
+
+        currentScreen = mainMenuScreen;
+    }
 };
