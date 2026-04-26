@@ -14,7 +14,7 @@ class MqttTelemetryDatasource {
   static int get _mqPort => int.tryParse(dotenv.env['MQ_PORT'] ?? '') ?? 0;
   static String get _mqUsername => dotenv.env['MQ_USERNAME'] ?? '';
   static String get _mqPassword => dotenv.env['MQ_PASSWORD'] ?? '';
-  static String get _pemPath => dotenv.env['CERT_PATH'] ?? '';
+  static String get _pemPath => dotenv.env['MQ_CERT_PATH'] ?? '';
 
   static const String _topic = '/gardener/telemetry';
 
