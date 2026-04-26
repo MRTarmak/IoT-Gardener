@@ -3,6 +3,8 @@
 #include <string>
 #include <U8g2lib.h>
 
+typedef unsigned char uint8_t;
+
 enum ScreenType : uint8_t
 {
     TelemetrySoil = 0,
@@ -154,7 +156,7 @@ public:
 class LCDUI
 {
     U8G2 &lcd;
-    
+
     UIData uiData = UIData();
 
     Screen<ScreenType::TelemetrySoil> telemetrySoilScreen = Screen<ScreenType::TelemetrySoil>(lcd);
@@ -200,7 +202,7 @@ public:
 
     int nextScreen()
     {
-        currentScreen = static_cast<ScreenType>((static_cast<uint8_t>(currentScreen) + 1) % totalScreens);
+        currentScreen = (ScreenType)(((uint8_t)currentScreen + 1) % totalScreens);
         return render();
     }
 };
