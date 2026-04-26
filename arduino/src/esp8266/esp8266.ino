@@ -90,7 +90,8 @@ void announceState(bool force = false)
         Serial.println("STATE:CONNECTING_WIFI");
         break;
     case STATE_READY:
-        Serial.println("STATE:READY");
+        Serial.print("STATE:READY|");
+        Serial.println(targetSSID);
 
         if (mqtt_client.connected())
         {
@@ -304,7 +305,7 @@ void connectToMQTT()
             Serial.println("LOG: Connected to MQTT broker");
 
             // Publish message upon successful connection
-            mqtt_client.publish(mqtt_topic, "Hi EMQX I'm ESP8266 ^^");
+            mqtt_client.publish(mqtt_topic, "Hi! I'm ESP8266 from IoT-Gardener ^^");
         }
         else
         {
