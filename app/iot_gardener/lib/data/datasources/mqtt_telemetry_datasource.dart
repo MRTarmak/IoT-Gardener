@@ -14,8 +14,9 @@ class MqttTelemetryDatasource {
   static int get _mqPort => int.tryParse(dotenv.env['MQ_PORT'] ?? '') ?? 0;
   static String get _mqUsername => dotenv.env['MQ_USERNAME'] ?? '';
   static String get _mqPassword => dotenv.env['MQ_PASSWORD'] ?? '';
-  static String get _topic => dotenv.env['MQ_TOPIC'] ?? '';
-  static const String _pemPath = 'assets/certs/dash-wqtt-ru.pem';
+  static String get _pemPath => dotenv.env['CERT_PATH'] ?? '';
+
+  static const String _topic = '/gardener/telemetry';
 
   MqttServerClient? _client;
   StreamSubscription<List<MqttReceivedMessage<MqttMessage?>>>? _subscription;
