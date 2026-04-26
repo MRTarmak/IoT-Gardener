@@ -4,7 +4,11 @@ FQBN="esp8266:esp8266:generic:eesz=1M64,baud=115200"
 SKETCH_DIR="./src/esp8266"
 LIBRARIES_DIR="./libraries"
 
-source .env
+if [ -f ".env" ]; then
+    source .env
+else
+    echo "WARNING: .env file does not exist"
+fi
 
 check_env() {
     if [ -z "$1" ]; then
@@ -24,16 +28,31 @@ fi
 
 EXTRA_FLAGS="$@"
 
+
+tz_offset=$(date +%z)
+sign=${tz_offset:0:1}
+hours=${tz_offset:1:2}
+minutes=${tz_offset:3:2}
+TZ_OFFSET=$((hours * 3600 + minutes * 60))
+[ "$sign" = "-" ] && TZ_OFFSET=$(( -TZ_OFFSET ))
+
+
 # Check env
 check_env "$MQ_ENDPOINT" "MQ_ENDPOINT"
 check_env "$MQ_PORT" "MQ_PORT"
 check_env "$MQ_USERNAME" "MQ_USERNAME"
 check_env "$MQ_PASSWORD" "MQ_PASSWORD"
 check_env "$PORT" "PORT"
+check_env "$MQ_CERT_PATH" "MQ_CERT_PATH"
+
+echo "TZ_OFFSET=$TZ_OFFSET"
 
 #
 # Compile
 #
+
+HEX_CONTENT=$(hexdump -v -e '1/1 "0x%02x,"' "$MQ_CERT_PATH")
+MQ_CERT_CONTENT="{$HEX_CONTENT""0x00}"
 
 COMPILE_CMD=(arduino-cli compile --fqbn "$FQBN" --libraries "$LIBRARIES_DIR")
 
@@ -41,7 +60,8 @@ MACRO_FLAGS="-DMQ_ENDPOINT=$MQ_ENDPOINT "
 MACRO_FLAGS+="-DMQ_PORT=$MQ_PORT "
 MACRO_FLAGS+="-DMQ_USERNAME=$MQ_USERNAME "
 MACRO_FLAGS+="-DMQ_PASSWORD=$MQ_PASSWORD "
-
+MACRO_FLAGS+="-DTZ_OFFSET=$TZ_OFFSET "
+MACRO_FLAGS+="-DMQ_CERT=$MQ_CERT_CONTENT"
 
 COMPILE_CMD+=(--build-property "compiler.cpp.extra_flags=$MACRO_FLAGS")
 
@@ -95,4 +115,4 @@ fi
 rm -f errors.txt
 echo "UPLOADING SUCCESS"
 
-./serial_monitor
+./serial_monitor.sh
