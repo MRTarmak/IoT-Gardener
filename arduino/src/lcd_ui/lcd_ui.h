@@ -7,9 +7,10 @@ typedef unsigned char uint8_t;
 
 enum ScreenType : uint8_t
 {
-    TelemetrySoil = 0,
-    TelemetryEnv = 1,
-    Settings = 2
+    Splash = 0,
+    TelemetrySoil = 1,
+    TelemetryEnv = 2,
+    Settings = 3
 };
 
 enum Mode : bool
@@ -111,6 +112,78 @@ public:
 };
 
 template <>
+class Screen<ScreenType::Splash>
+{
+    U8G2 &lcd;
+
+public:
+    Screen(U8G2 &lcd) : lcd(lcd) {}
+
+    int render(UIData &uiData)
+    {
+        (void)uiData;
+
+        lcd.clearBuffer();
+        lcd.drawFrame(0, 0, 128, 64);
+
+        const uint8_t artW = 23;
+        const uint8_t artH = 23;
+        const uint8_t pixelScale = 2;
+        const char *leafArt[artH] = {
+            "...................#...",
+            ".................###...",
+            "..............######...",
+            "............########...",
+            ".........############..",
+            ".......##############..",
+            "......###############..",
+            ".....###########.####..",
+            ".....##########.#####..",
+            "....#########..######..",
+            "....########.########..",
+            "...#######..#########..",
+            "...#####..##########...",
+            "...####..###########...",
+            "...###..############...",
+            "...###.#############...",
+            "....#.#############....",
+            "......#############....",
+            ".....#############.....",
+            "....#############......",
+            "...###...#######.......",
+            "...###.................",
+            "...##..................",
+        };
+
+        lcd.setFont(u8g2_font_6x12_t_cyrillic);
+        const char *title = "IoT Gardener";
+        const int titleW = lcd.getStrWidth(title);
+
+        const int artPixelW = artW * pixelScale;
+        const int artX = (128 - artPixelW) / 2;
+        const int artY = 2;
+
+        for (uint8_t y = 0; y < artH; y++)
+        {
+            for (uint8_t x = 0; x < artW; x++)
+            {
+                if (leafArt[y][x] == '#')
+                {
+                    lcd.drawBox(artX + x * pixelScale, artY + y * pixelScale, pixelScale, pixelScale);
+                }
+            }
+        }
+
+        const int titleX = (128 - titleW) / 2;
+        const int titleY = 61;
+        lcd.drawUTF8(titleX, titleY, title);
+        lcd.sendBuffer();
+
+        return 0;
+    }
+};
+
+template <>
 class Screen<ScreenType::TelemetryEnv>
 {
     U8G2 &lcd;
@@ -159,18 +232,16 @@ class LCDUI
 
     UIData uiData = UIData();
 
+    Screen<ScreenType::Splash> splashScreen = Screen<ScreenType::Splash>(lcd);
     Screen<ScreenType::TelemetrySoil> telemetrySoilScreen = Screen<ScreenType::TelemetrySoil>(lcd);
     Screen<ScreenType::TelemetryEnv> telemetryEnvScreen = Screen<ScreenType::TelemetryEnv>(lcd);
     Screen<ScreenType::Settings> settingsScreen = Screen<ScreenType::Settings>(lcd);
 
-    ScreenType currentScreen = ScreenType::TelemetrySoil;
-    const uint8_t totalScreens = 3;
+    ScreenType currentScreen = ScreenType::Splash;
+    const uint8_t totalScreens = 4;
 
 public:
-    LCDUI(U8G2 &lcd) : lcd(lcd)
-    {
-        this->lcd.enableUTF8Print();
-    };
+    LCDUI(U8G2 &lcd) : lcd(lcd) {};
 
     void setSoilTemp(float temp) { uiData.soilTemp = temp; }
     void setSoilMoist(float moist) { uiData.soilMoist = moist; }
@@ -189,6 +260,8 @@ public:
     {
         switch (currentScreen)
         {
+        case ScreenType::Splash:
+            return splashScreen.render(uiData);
         case ScreenType::TelemetrySoil:
             return telemetrySoilScreen.render(uiData);
         case ScreenType::TelemetryEnv:
@@ -200,9 +273,20 @@ public:
         }
     }
 
+    int init()
+    {
+        lcd.enableUTF8Print();
+        return render();
+    }
+
     int nextScreen()
     {
         currentScreen = (ScreenType)(((uint8_t)currentScreen + 1) % totalScreens);
+        if (currentScreen == ScreenType::Splash)
+        {
+            // Skip splash screen after the first cycle
+            currentScreen = (ScreenType)(((uint8_t)currentScreen + 1) % totalScreens);
+        }
         return render();
     }
 };
