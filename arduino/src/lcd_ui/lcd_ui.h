@@ -240,22 +240,6 @@ class LCDUI
     ScreenType currentScreen = ScreenType::Splash;
     const uint8_t totalScreens = 4;
 
-public:
-    LCDUI(U8G2 &lcd) : lcd(lcd) {};
-
-    void setSoilTemp(float temp) { uiData.soilTemp = temp; }
-    void setSoilMoist(float moist) { uiData.soilMoist = moist; }
-    void setSoilPh(float ph) { uiData.soilPh = ph; }
-    void setAirTemp(float temp) { uiData.airTemp = temp; }
-    void setAirHum(float hum) { uiData.airHum = hum; }
-    void setLight(float light) { uiData.light = light; }
-    void setMode(Mode mode) { uiData.mode = mode; }
-    void setSSID(const char *ssid)
-    {
-        strncpy(uiData.ssid, ssid, sizeof(uiData.ssid) - 1);
-        uiData.ssid[sizeof(uiData.ssid) - 1] = '\0';
-    }
-
     int render()
     {
         switch (currentScreen)
@@ -273,6 +257,16 @@ public:
         }
     }
 
+public:
+    LCDUI(U8G2 &lcd) : lcd(lcd) {};
+
+    void setSoilTemp(float temp) { uiData.soilTemp = temp; }
+    void setSoilMoist(float moist) { uiData.soilMoist = moist; }
+    void setSoilPh(float ph) { uiData.soilPh = ph; }
+    void setAirTemp(float temp) { uiData.airTemp = temp; }
+    void setAirHum(float hum) { uiData.airHum = hum; }
+    void setLight(float light) { uiData.light = light; }
+
     int init()
     {
         lcd.enableUTF8Print();
@@ -287,6 +281,21 @@ public:
             // Skip splash screen after the first cycle
             currentScreen = (ScreenType)(((uint8_t)currentScreen + 1) % totalScreens);
         }
+        return render();
+    }
+
+    int setupWiFi(const char *ssid)
+    {
+        strncpy(uiData.ssid, ssid, sizeof(uiData.ssid) - 1);
+        uiData.ssid[sizeof(uiData.ssid) - 1] = '\0';
+        uiData.mode = Mode::Broadcast;
+        return render();
+    }
+
+    int resetWiFi()
+    {
+        uiData.ssid[0] = '\0';
+        uiData.mode = Mode::Setup;
         return render();
     }
 };
