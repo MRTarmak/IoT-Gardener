@@ -73,7 +73,8 @@ class HomeScreen extends StatelessWidget {
         profile != null &&
         _isOutOfRange(telemetry!.airHumidity, profile.airHumidityRange);
     final phOut =
-        profile != null && _isOutOfRange(telemetry!.soilPh, profile.soilPhRange);
+        profile != null &&
+        _isOutOfRange(telemetry!.soilPh, profile.soilPhRange);
     final soilTempOut =
         profile != null &&
         _isOutOfRange(telemetry!.soilTemperature, profile.soilTemperatureRange);
@@ -129,16 +130,16 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           TelemetryTile(
+            label: 'Температура почвы',
+            value: '${telemetry!.soilTemperature.toStringAsFixed(1)} °C',
+            icon: Icons.thermostat,
+            isOutOfRange: soilTempOut,
+          ),
+          TelemetryTile(
             label: 'Влажность почвы',
             value: '${telemetry!.soilMoisture.toStringAsFixed(1)} %',
             icon: Icons.grass,
             isOutOfRange: soilOut,
-          ),
-          TelemetryTile(
-            label: 'Влажность воздуха',
-            value: '${telemetry!.airHumidity.toStringAsFixed(1)} %',
-            icon: Icons.water_drop,
-            isOutOfRange: airOut,
           ),
           TelemetryTile(
             label: 'Кислотность почвы (pH)',
@@ -147,16 +148,16 @@ class HomeScreen extends StatelessWidget {
             isOutOfRange: phOut,
           ),
           TelemetryTile(
-            label: 'Температура почвы',
-            value: '${telemetry!.soilTemperature.toStringAsFixed(1)} °C',
-            icon: Icons.thermostat,
-            isOutOfRange: soilTempOut,
-          ),
-          TelemetryTile(
             label: 'Температура воздуха',
             value: '${telemetry!.airTemperature.toStringAsFixed(1)} °C',
             icon: Icons.thermostat,
             isOutOfRange: airTempOut,
+          ),
+          TelemetryTile(
+            label: 'Влажность воздуха',
+            value: '${telemetry!.airHumidity.toStringAsFixed(1)} %',
+            icon: Icons.water_drop,
+            isOutOfRange: airOut,
           ),
           TelemetryTile(
             label: 'Освещенность',
