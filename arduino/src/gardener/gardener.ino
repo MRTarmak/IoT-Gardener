@@ -5,18 +5,19 @@
 
 #include "lcd_ui.h"
 
-#define BUTTON (2)
+#define BUTTON_PAGE (2)
+#define BUTTON_RESET (4)
 #define RX_PIN (6)
 #define TX_PIN (7)
-
 #define FATAL_ERROR while (1)
+#define V_PH_NEUTRAL (2.88f)
+#define PH_STEP (0.1525f)
+#define LCD_RST (8)
+#define LCD_RS (10)
+#define READ_INTERVAL (60000)
+#define BP_DEBOUNCE (200)
+#define BR_DEBOUNCE (200)
 
-Adafruit_BME280 bme;  // 0x76 or 0x77
-Adafruit_ADS1115 ads; // 0x48
-
-unsigned long lastReadTime = 0;
-const unsigned long READ_INTERVAL = 60000;
-// const unsigned long READ_INTERVAL = 5000;
 
 // State machine
 enum SystemState : uint8_t
@@ -26,13 +27,23 @@ enum SystemState : uint8_t
     STATE_READY = 2,
 };
 
+long bp_last_debounce = 0;
+int bp_state = HIGH;
+int bp_last_state = HIGH;
+bool bp_executed = false;
+
+long br_last_debounce = 0;
+int  br_state = HIGH;
+int  br_last_state = HIGH;
+bool br_executed = false;
+
+Adafruit_BME280 bme;  // 0x76 or 0x77
+Adafruit_ADS1115 ads; // 0x48
+
+unsigned long lastReadTime = 0;
+
 SoftwareSerial esp01(RX_PIN, TX_PIN);
 SystemState system_state;
-
-
-#define LCD_RST (8)
-#define LCD_RS (10)
-
 lcd_t u8g2(U8G2_R0, LCD_RS, LCD_RST);
 LCDUI lcdui(u8g2);
 
@@ -42,7 +53,8 @@ void setup()
     Serial.begin(74880);
     esp01.begin(74880);
 
-    pinMode(BUTTON, INPUT);
+    pinMode(BUTTON_PAGE, INPUT_PULLUP);
+    pinMode(BUTTON_RESET, INPUT_PULLUP);
 
     // I2C
     Wire.begin();
@@ -65,25 +77,56 @@ void setup()
     }
 }
 
-bool button_start = false;
-int buttonState = 0; 
-
 void loop()
 {
-    buttonState = digitalRead(BUTTON);
+    int bp_reading = digitalRead(BUTTON_PAGE);
 
-    if (buttonState == HIGH) 
-    {    
-        button_start = true;
-    }
-    else
+    if (bp_reading != bp_last_state)
+        bp_last_debounce = millis();
+
+    if ((millis() - bp_last_debounce) > BP_DEBOUNCE)
     {
-        if (button_start)
+        if (bp_reading != bp_state)
         {
-            lcdui.nextScreen();
-            button_start = false;
+            bp_state = bp_reading;
+
+            if (bp_state == LOW && !bp_executed)
+            {
+                lcdui.nextScreen();
+                bp_executed = true;
+            }
+
+            if (bp_state == HIGH)
+                bp_executed = false;
         }
     }
+
+    bp_last_state = bp_reading;
+
+    int br_reading = digitalRead(BUTTON_RESET);
+
+    if (br_reading != br_last_state)
+        br_last_debounce = millis();
+
+    if ((millis() - br_last_debounce) > BR_DEBOUNCE)
+    {
+        if (br_reading != br_state)
+        {
+            br_state = br_reading;
+
+            if (br_state == LOW && !br_executed)
+            {
+                esp01.println("CMD:RESET_WIFI");
+                br_executed = true;
+            }
+
+            if (br_state == HIGH)
+                br_executed = false;
+        }
+    }
+
+    br_last_state = br_reading;
+
 
     if (esp01.available())
     {
@@ -125,15 +168,15 @@ void readSensors()
     float airPres = bme.readPressure() / 100.0 * 0.75006; // mmhg
 
     // ADS1115
-    // A0 - Temp
+    // A0 - pH
     int16_t adc0 = ads.readADC_SingleEnded(0);
     float volts0 = ads.computeVolts(adc0);
-    float soilTemp = volts0 * 10.0; // TODO
+    float soilpH = 7.0 + (V_PH_NEUTRAL - volts0) / PH_STEP;
 
-    // A1 - pH
+    // A1 - Temp
     int16_t adc1 = ads.readADC_SingleEnded(1);
     float volts1 = ads.computeVolts(adc1);
-    float soilpH = volts1 * 7 / 2.5; // TODO
+    float soilTemp = volts1 * 8.0;
 
     // A2 - Soil Moisture
     int16_t adc2 = ads.readADC_SingleEnded(2);
@@ -147,8 +190,7 @@ void readSensors()
     // A3 - Light
     int16_t adc3 = ads.readADC_SingleEnded(3);
     float volts3 = ads.computeVolts(adc3);
-    float light = (volts3 / 5.0) * 100.0;
-
+    float light = volts3 * 200.0;
 
     // Update screen
     lcdui.uiData.airHum = airHum;
@@ -160,12 +202,12 @@ void readSensors()
     lcdui.render();
 
     String message = "TLM:{";
-    message += "\"soilTemperature:\"" + String(soilTemp) + ",";
-    message += "\"soilMoisture:\"" + String(soilMoist) + ",";
-    message += "\"soilPh:\"" + String(soilpH) + ",";
-    message += "\"airTemperature:\"" + String(airTemp) + ",";
-    message += "\"airHumidity:\"" + String(airHum) + ",";
-    message += "\"light:\"" + String(light) + "}";
+    message += "\"soilTemperature\":" + String(soilTemp) + ",";
+    message += "\"soilMoisture\":" + String(soilMoist) + ",";
+    message += "\"soilPh\":" + String(soilpH) + ",";
+    message += "\"airTemperature\":" + String(airTemp) + ",";
+    message += "\"airHumidity\":" + String(airHum) + ",";
+    message += "\"light\":" + String(light) + "}";
 
     esp01.println(message);
     Serial.println(message);
