@@ -47,7 +47,7 @@ int renderCommon(U8G2_ST7920_128X64_1_HW_SPI &lcd, const String *items, const ui
 
         // 2. Заголовок
         lcd.setFont(u8g2_font_6x12_t_cyrillic);
-        const int titleY = lcd.getAscent() + 2; 
+        const int titleY = lcd.getAscent() + 4; 
         const int titleW = lcd.getUTF8Width(items[0].c_str());
         const int titleX = (128 - titleW) / 2;
         lcd.drawUTF8(titleX, titleY, items[0].c_str());
@@ -77,47 +77,6 @@ int renderCommon(U8G2_ST7920_128X64_1_HW_SPI &lcd, const String *items, const ui
     return 0;
 }
 
-// int renderCommon(U8G2 &lcd, const String *items, const uint8_t itemsSize)
-// {
-//     if (itemsSize == 0)
-//     {
-//         return -1;
-//     }
-
-//     lcd.clearBuffer();
-
-//     // Outter frame
-//     lcd.drawFrame(0, 0, 128, 64);
-
-//     // Title on top, centered.
-//     lcd.setFont(u8g2_font_6x12_t_cyrillic);
-//     const int titleY = lcd.getAscent() + 1;
-//     const int titleW = lcd.getStrWidth(items[0].c_str());
-//     const int titleX = (128 - titleW) / 2;
-//     lcd.drawUTF8(titleX, titleY, items[0].c_str());
-
-//     // Body lines centered vertically in the remaining area and left-aligned.
-//     const uint8_t bodyItemsSize = itemsSize - 1;
-//     const int leftPadding = 8;
-//     const int bodyTop = titleY + 3;
-//     const int bodyHeight = 64 - bodyTop - 2;
-//     lcd.setFont(u8g2_font_5x8_t_cyrillic);
-//     const int lineHeight = lcd.getMaxCharHeight();
-//     const int blockHeight = lineHeight * bodyItemsSize;
-//     const int topOffset = (bodyHeight > blockHeight) ? (bodyHeight - blockHeight) / 2 : 0;
-//     const int firstLineY = bodyTop + topOffset + lcd.getAscent();
-
-//     for (int i = 0; i < bodyItemsSize; i++)
-//     {
-//         const int y = firstLineY + lineHeight * i;
-//         lcd.drawUTF8(leftPadding, y, items[i + 1].c_str());
-//     }
-
-//     lcd.sendBuffer();
-
-//     return 0;
-// }
-
 struct LCDUI
 {
     LCDUI(lcd_t &lcd) : lcd(lcd) {};
@@ -145,7 +104,7 @@ struct LCDUI
             items[3] = "Light: " + String(uiData.light);
             return renderCommon(lcd, items, 4);
         case ScreenType::Settings:
-            items[0] = "Settings";
+            items[0] = "WIFI SETTINGS";
             items[1] = "Mode: " + String(uiData.mode == Mode::Broadcast ? "Working" : "Configuring");
             items[2] = "WiFi: " + String(uiData.mode == Mode::Broadcast ? uiData.ssid : "ESP_Config");
             return renderCommon(lcd, items, 3);
