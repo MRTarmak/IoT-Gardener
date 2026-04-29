@@ -47,4 +47,3 @@ app.*.map.json
 # Local secrets
 .env
 assets/env/.env
-assets/certs/*.pem

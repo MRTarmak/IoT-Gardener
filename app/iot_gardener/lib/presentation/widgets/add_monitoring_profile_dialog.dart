@@ -26,16 +26,16 @@ class _AddMonitoringProfileDialogState
 
   final _nameController = TextEditingController();
 
-  final _soilMinController = TextEditingController();
-  final _soilMaxController = TextEditingController();
-  final _airMinController = TextEditingController();
-  final _airMaxController = TextEditingController();
-  final _phMinController = TextEditingController();
-  final _phMaxController = TextEditingController();
   final _soilTempMinController = TextEditingController();
   final _soilTempMaxController = TextEditingController();
+  final _soilMinController = TextEditingController();
+  final _soilMaxController = TextEditingController();
+  final _phMinController = TextEditingController();
+  final _phMaxController = TextEditingController();
   final _airTempMinController = TextEditingController();
   final _airTempMaxController = TextEditingController();
+  final _airMinController = TextEditingController();
+  final _airMaxController = TextEditingController();
   final _lightMinController = TextEditingController();
   final _lightMaxController = TextEditingController();
 
@@ -44,16 +44,16 @@ class _AddMonitoringProfileDialogState
   @override
   void dispose() {
     _nameController.dispose();
-    _soilMinController.dispose();
-    _soilMaxController.dispose();
-    _airMinController.dispose();
-    _airMaxController.dispose();
-    _phMinController.dispose();
-    _phMaxController.dispose();
     _soilTempMinController.dispose();
     _soilTempMaxController.dispose();
+    _soilMinController.dispose();
+    _soilMaxController.dispose();
+    _phMinController.dispose();
+    _phMaxController.dispose();
     _airTempMinController.dispose();
     _airTempMaxController.dispose();
+    _airMinController.dispose();
+    _airMaxController.dispose();
     _lightMinController.dispose();
     _lightMaxController.dispose();
     super.dispose();
@@ -76,25 +76,25 @@ class _AddMonitoringProfileDialogState
 
     final params = MonitoringProfileParams(
       name: _nameController.text.trim(),
+      soilTemperatureRange: (
+        _parseOptionalDouble(_soilTempMinController.text),
+        _parseOptionalDouble(_soilTempMaxController.text),
+      ),
       soilMoistureRange: (
         _parseOptionalDouble(_soilMinController.text),
         _parseOptionalDouble(_soilMaxController.text),
-      ),
-      airHumidityRange: (
-        _parseOptionalDouble(_airMinController.text),
-        _parseOptionalDouble(_airMaxController.text),
       ),
       soilPhRange: (
         _parseOptionalDouble(_phMinController.text),
         _parseOptionalDouble(_phMaxController.text),
       ),
-      soilTemperatureRange: (
-        _parseOptionalDouble(_soilTempMinController.text),
-        _parseOptionalDouble(_soilTempMaxController.text),
-      ),
       airTemperatureRange: (
         _parseOptionalDouble(_airTempMinController.text),
         _parseOptionalDouble(_airTempMaxController.text),
+      ),
+      airHumidityRange: (
+        _parseOptionalDouble(_airMinController.text),
+        _parseOptionalDouble(_airMaxController.text),
       ),
       lightRange: (
         _parseOptionalDouble(_lightMinController.text),
@@ -193,14 +193,14 @@ class _AddMonitoringProfileDialogState
               ),
               const SizedBox(height: 12),
               _buildRangeFields(
+                label: 'Температура почвы (°C)',
+                minController: _soilTempMinController,
+                maxController: _soilTempMaxController,
+              ),
+              _buildRangeFields(
                 label: 'Влажность почвы (%)',
                 minController: _soilMinController,
                 maxController: _soilMaxController,
-              ),
-              _buildRangeFields(
-                label: 'Влажность воздуха (%)',
-                minController: _airMinController,
-                maxController: _airMaxController,
               ),
               _buildRangeFields(
                 label: 'Кислотность почвы (pH)',
@@ -208,14 +208,14 @@ class _AddMonitoringProfileDialogState
                 maxController: _phMaxController,
               ),
               _buildRangeFields(
-                label: 'Температура почвы (°C)',
-                minController: _soilTempMinController,
-                maxController: _soilTempMaxController,
-              ),
-              _buildRangeFields(
                 label: 'Температура воздуха (°C)',
                 minController: _airTempMinController,
                 maxController: _airTempMaxController,
+              ),
+              _buildRangeFields(
+                label: 'Влажность воздуха (%)',
+                minController: _airMinController,
+                maxController: _airMaxController,
               ),
               _buildRangeFields(
                 label: 'Освещенность (лк)',
