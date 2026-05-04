@@ -152,7 +152,8 @@ class _WifiProvisioningScreenState extends State<WifiProvisioningScreen> {
         const SizedBox(height: 12),
         const Text(
           'Откройте настройки Wi-Fi на телефоне и подключитесь к сети '
-          'с именем «ESP_Config». После этого вернитесь в приложение '
+          'с именем «ESP_Config». Пароль: 12345678. '
+          'После этого вернитесь в приложение '
           'и нажмите кнопку ниже.',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: Colors.black54),

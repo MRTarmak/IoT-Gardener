@@ -43,7 +43,7 @@ class WifiProvisioningDatasource {
         }
       });
 
-      final message = '$ssid\r\n$password\r\n';
+      final message = '$ssid|$password';
       final List<int> data = utf8.encode(message);
 
       final sentBytes = socket.send(
@@ -121,11 +121,11 @@ class WifiProvisioningDatasource {
   }
 
   List<String>? parsePongPacket(String payload) {
-  final normalized = payload.replaceAll('\r\n', '\n').trim();
+  final normalized = payload.trim();
   if (normalized.isEmpty) return null;
 
   final lines = normalized
-      .split('\n')
+      .split('|')
       .map((s) => s.trim())
       .where((s) => s.isNotEmpty)
       .toList();

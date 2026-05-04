@@ -4,20 +4,20 @@ class MonitoringProfileFormatter {
   static String formatProfileDetails(MonitoringProfileParams profile) {
     final parts = <String>[];
 
+    final soilTemp = _formatRange(profile.soilTemperatureRange, '°C');
+    if (soilTemp != null) parts.add('Темп. почвы: $soilTemp');
+
     final soil = _formatRange(profile.soilMoistureRange, '%');
     if (soil != null) parts.add('Почва: $soil');
-
-    final air = _formatRange(profile.airHumidityRange, '%');
-    if (air != null) parts.add('Воздух: $air');
 
     final ph = _formatRange(profile.soilPhRange, '');
     if (ph != null) parts.add('pH: $ph');
 
-    final soilTemp = _formatRange(profile.soilTemperatureRange, '°C');
-    if (soilTemp != null) parts.add('Темп. почвы: $soilTemp');
-
     final airTemp = _formatRange(profile.airTemperatureRange, '°C');
     if (airTemp != null) parts.add('Темп. воздуха: $airTemp');
+
+    final air = _formatRange(profile.airHumidityRange, '%');
+    if (air != null) parts.add('Воздух: $air');
 
     final light = _formatRange(profile.lightRange, ' лк');
     if (light != null) parts.add('Свет: $light');
