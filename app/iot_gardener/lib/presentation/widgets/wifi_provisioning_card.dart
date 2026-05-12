@@ -19,8 +19,8 @@ class WifiProvisioningCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Если устройство еще не подключено к вашей Wi-Fi '
-              'сети (светодиод мигает), пройдите провиженинг.',
+              'Если устройство еще не подключено к вашей '
+              'Wi-Fi сети, пройдите провиженинг.',
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(

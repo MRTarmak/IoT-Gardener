@@ -75,7 +75,7 @@ class _MqttConnectionCardState extends State<MqttConnectionCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Если устройство уже подключено к вашей Wi-Fi сети (светодиод горит), '
+              'Если устройство уже подключено к вашей Wi-Fi сети, '
               'настройте подключение к MQTT брокеру.',
             ),
             const SizedBox(height: 12),
